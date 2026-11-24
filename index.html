@@ -111,17 +111,18 @@ table.items tbody.split tr:first-child td{border-bottom:1px dashed #000}
 table.items tr.exprow td{background:#fff;padding-top:1mm;padding-bottom:1mm;border-top:1px dashed #000;border-bottom:1px dashed #000}
 table.items tr.exprow td.chk i{width:6.5mm;height:6.5mm}
 td.expcell{font-size:10pt;font-weight:700;padding-left:8mm!important;text-align:right}
-td.expd{text-align:center;font-size:14pt;font-weight:700;white-space:nowrap;padding-left:1mm!important;padding-right:1mm!important}
+td.expd{text-align:center;font-size:13pt;font-weight:700;white-space:nowrap;overflow:hidden;padding-left:1mm!important;padding-right:1mm!important}
+td.expd .fit,td.qty .fit{display:inline-block;white-space:nowrap}
 td.expd.multi{font-size:10.5pt;font-family:inherit;line-height:1.2}
-tr.exprow td.expd{font-size:14pt}
+tr.exprow td.expd{font-size:13pt}
 table.items tr.exprow td.qty b{font-size:17pt}
 td.qty .tot{display:block;font-size:8.5pt;font-weight:700;text-align:right;line-height:1}
 td.name .merged{display:inline-block;font-size:8.5pt;border:1px solid #000;border-radius:1mm;padding:0 1.5mm}
-td.qty{width:19mm;text-align:right;white-space:nowrap}
+td.qty{overflow:hidden;text-align:right;white-space:nowrap}
 td.qty b{font-size:20pt}
 td.qty small{font-size:9pt}
 td.bc{width:45mm;text-align:center;padding:1mm}
-td.bc svg{width:43mm;height:15mm;display:block;margin:0 auto}
+td.bc svg{width:41mm;height:15mm;display:block;margin:0 auto}
 td.bc .lg{display:inline-block;font-size:7.5pt;font-weight:700;background:#000;color:#fff;padding:0 2mm;border-radius:1mm;margin-bottom:.5mm;-webkit-print-color-adjust:exact;print-color-adjust:exact}
 td.bc .none{font-size:9pt;border:1.5px dashed #000;padding:2mm;font-weight:700}
 .cont{font-size:9pt;color:#333;font-weight:400;background:#fff!important;border:0!important;padding:0 0 1mm!important}
@@ -482,7 +483,7 @@ function render(){
       </div>
       ${s.note?`<div class="p-note"><h3>⚠ 特記事項（必ず読む）</h3><div>${esc(s.note)}</div></div>`:""}
       <table class="items">
-        <colgroup><col style="width:10mm"><col style="width:30mm"><col>${hasExp?'<col style="width:31mm">':""}<col style="width:17mm"><col style="width:47mm"></colgroup>
+        <colgroup><col style="width:10mm"><col style="width:30mm"><col>${hasExp?'<col style="width:34mm">':""}<col style="width:19mm"><col style="width:46mm"></colgroup>
         <thead>
           <tr><th colspan="${hasExp?6:5}" class="cont">${esc(s.dest)} ／ 伝票 ${esc(s.code)}</th></tr>
           <tr><th>✓</th><th>商品コード</th><th>商品名</th>${hasExp?'<th style="text-align:center">出荷期限</th>':""}<th style="text-align:right">数量</th><th style="text-align:center">バーコード</th></tr>
@@ -511,19 +512,19 @@ function render(){
         : `${it.parts.length>1?`<span class="merged">${it.parts.length}行をまとめ（${it.parts.join("＋")}）</span>`:""}`;
       const expTd = !hasExp ? "" : split
         ? `<td class="expd multi">${exps.length}種類<br>▼</td>`
-        : `<td class="expd">${exps.length?esc(exps[0][0]):"―"}</td>`;
+        : `<td class="expd"><span class="fit">${exps.length?esc(exps[0][0]):"―"}</span></td>`;
       tr.innerHTML=`<td class="chk"><i></i></td>
         <td class="code">${esc(it.code)}</td>
         <td class="name">${esc(it.name)}<div class="sub">${sub}</div></td>
         ${expTd}
-        <td class="qty">${split?'<span class="tot">合計</span>':""}<b>${it.qty.toLocaleString()}</b><small>個</small></td>
+        <td class="qty">${split?'<span class="tot">合計</span>':""}<span class="fit"><b>${it.qty.toLocaleString()}</b><small>個</small></span></td>
         <td class="bc"></td>`;
       if(split) exps.forEach(([d,q],k)=>{
         const r=document.createElement("tr"); r.className="exprow"+(k===exps.length-1?" last":"");
         r.innerHTML=`<td class="chk"><i></i></td>
           <td colspan="2" class="expcell">└ 期限${k+1}つ目</td>
-          <td class="expd">${esc(d)}</td>
-          <td class="qty"><b>${q.toLocaleString()}</b><small>個</small></td>
+          <td class="expd"><span class="fit">${esc(d)}</span></td>
+          <td class="qty"><span class="fit"><b>${q.toLocaleString()}</b><small>個</small></span></td>
           <td></td>`;
         tb.appendChild(r);
       });
@@ -536,11 +537,31 @@ function render(){
     pages.appendChild(p);
   });
 
+  fitAll();
   $("pvTitle").hidden=false;
   $("step1").classList.add("done");
   $("step2").classList.remove("off");
   $("printBtn").textContent=`🖨 印刷する（${slips.length}枚）`;
 }
+
+/* パソコンの文字の形がちがっても、期限や数量がはみ出して重ならないよう、入りきる大きさまで文字を縮める */
+function fitAll(){
+  document.querySelectorAll("#pages .fit").forEach(el=>{
+    el.style.transform=""; el.style.transformOrigin="";
+    const td=el.parentElement, cs=getComputedStyle(td);
+    const avail=td.clientWidth-parseFloat(cs.paddingLeft)-parseFloat(cs.paddingRight)-2;
+    const w=el.scrollWidth;
+    if(w>avail && avail>0){
+      const k=Math.max(.55,avail/w);
+      el.style.transform=`scale(${k})`;
+      el.style.transformOrigin=td.classList.contains("qty")?"right center":"center center";
+      el.style.marginLeft=el.style.marginRight=td.classList.contains("qty")?"":`${-(w-w*k)/2}px`;
+      if(td.classList.contains("qty")) el.style.marginLeft=`${-(w-w*k)}px`;
+    }else{ el.style.marginLeft=el.style.marginRight=""; }
+  });
+}
+window.addEventListener("beforeprint",fitAll);
+if(document.fonts&&document.fonts.ready) document.fonts.ready.then(()=>{ if(current) fitAll(); });
 
 function showError(msg){
   current=null; $("pages").innerHTML=""; $("pvTitle").hidden=true;
