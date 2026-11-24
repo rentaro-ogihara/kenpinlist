@@ -78,7 +78,9 @@ button{font-family:inherit;cursor:pointer}
 .p-count{text-align:right;flex:none;margin-left:6mm}
 .p-count .of{font-size:10pt}
 .p-count .n{font-size:26pt;font-weight:700;line-height:1}
-.p-count svg{display:block;margin-top:2mm;margin-left:auto}
+.slipbc{margin-top:2mm}
+.slipbc .lbl{font-size:7.5pt;text-align:center}
+.slipbc .bcw svg{width:44mm;height:11mm}
 
 .p-note{border:2.5px solid #000;border-radius:2mm;padding:2mm 3mm;margin-bottom:3mm}
 .p-note h3{margin:0 0 1mm;font-size:11pt}
@@ -121,17 +123,21 @@ td.name .merged{display:inline-block;font-size:8.5pt;border:1px solid #000;borde
 td.qty{overflow:hidden;text-align:right;white-space:nowrap}
 td.qty b{font-size:20pt}
 td.qty small{font-size:9pt}
-td.bc{width:45mm;text-align:center;padding:1mm}
-td.bc svg{width:41mm;height:15mm;display:block;margin:0 auto}
+/* 隣の行のバーコードを読まないように：バーは低め（9mm）にして、行の高さを最低19mmにし、上下のバーの間を10mm以上あける */
+td.bc{text-align:center;padding:1mm .5mm!important;height:19mm}
+.bcw{display:flex;align-items:center;justify-content:center;gap:.6mm}
+.bcw svg{width:38mm;height:9mm;display:block;flex:none}
+.bcw .aim{font-size:7pt;line-height:1;flex:none}
+.bcnum{font-family:Consolas,"Courier New",monospace;font-size:8pt;letter-spacing:.06em;margin-top:.4mm}
 td.bc .lg{display:inline-block;font-size:7.5pt;font-weight:700;background:#000;color:#fff;padding:0 2mm;border-radius:1mm;margin-bottom:.5mm;-webkit-print-color-adjust:exact;print-color-adjust:exact}
 td.bc .none{font-size:9pt;border:1.5px dashed #000;padding:2mm;font-weight:700}
 .cont{font-size:9pt;color:#333;font-weight:400;background:#fff!important;border:0!important;padding:0 0 1mm!important}
 
-.p-foot{display:flex;justify-content:space-between;align-items:flex-end;margin-top:4mm;gap:6mm}
+.p-foot{display:flex;justify-content:space-between;align-items:flex-end;margin-top:3mm;gap:6mm;break-inside:avoid}
 .p-total{font-size:13pt;border:2.5px solid #000;padding:2mm 4mm}
 .p-total b{font-size:20pt}
 .p-sign{display:flex;gap:3mm}
-.p-sign div{border:1.5px solid #000;width:32mm;height:16mm;font-size:9pt;padding:1mm 2mm}
+.p-sign div{border:1.5px solid #000;width:32mm;height:13mm;font-size:9pt;padding:1mm 2mm}
 
 /* ===== 登録画面 ===== */
 dialog{border:0;border-radius:16px;padding:0;width:min(760px,94vw);max-height:90vh}
@@ -403,13 +409,25 @@ function eanOk(s){
 function barcodeSVG(value){
   const svg=document.createElementNS("http://www.w3.org/2000/svg","svg");
   try{
-    JsBarcode(svg,value,{format:eanOk(value)?"EAN13":"CODE128",width:2,height:44,fontSize:15,margin:6,textMargin:1,flat:true});
-    svg.setAttribute("preserveAspectRatio","xMidYMid meet");
+    // 数字はSVGの外に別で書く（バーの高さを自由に変えられるように）。左右は10モジュール分の余白（クワイエットゾーン）
+    JsBarcode(svg,value,{format:eanOk(value)?"EAN13":"CODE128",width:2,height:40,displayValue:false,margin:20,flat:true});
+    svg.setAttribute("preserveAspectRatio","none");
     const w=svg.getAttribute("width"), h=svg.getAttribute("height");
     svg.setAttribute("viewBox","0 0 "+parseFloat(w)+" "+parseFloat(h));
     svg.removeAttribute("width"); svg.removeAttribute("height");
     return svg;
   }catch(e){ return null; }
+}
+/* 読み取り用：▶ バー ◀ ＋ 下に数字 */
+function barcodeBlock(value){
+  const svg=barcodeSVG(value); if(!svg) return null;
+  const box=document.createElement("div"); box.className="bcbox";
+  const row=document.createElement("div"); row.className="bcw";
+  row.innerHTML='<span class="aim">▶</span>'; row.appendChild(svg);
+  row.insertAdjacentHTML("beforeend",'<span class="aim">◀</span>');
+  box.appendChild(row);
+  box.insertAdjacentHTML("beforeend",`<div class="bcnum">${esc(value)}</div>`);
+  return box;
 }
 
 /* 使うバーコードを決める：①CSVの商品バーコード → ②登録済み（products.json・手入力） → ③ロジレスコード */
@@ -479,7 +497,7 @@ function render(){
             ${s.boxes?`<span>梱包数 <b>${esc(s.boxes)}</b></span>`:""}
           </div>
         </div>
-        <div class="p-count"><div class="of">伝票</div><div class="n">${si+1}<span style="font-size:14pt">/${slips.length}</span></div></div>
+        <div class="p-count"><div class="of">伝票</div><div class="n">${si+1}<span style="font-size:14pt">/${slips.length}</span></div><div class="slipbc"></div></div>
       </div>
       ${s.note?`<div class="p-note"><h3>⚠ 特記事項（必ず読む）</h3><div>${esc(s.note)}</div></div>`:""}
       <table class="items">
@@ -496,6 +514,8 @@ function render(){
         <div class="p-sign"><div>1人目チェック</div><div>2人目チェック</div></div>
       </div>`;
     const table=p.querySelector("table.items"), tb0=p.querySelector("tbody");
+    { const sb=p.querySelector(".slipbc"), blk=/^[0-9A-Za-z\-]+$/.test(s.code)?barcodeBlock(s.code):null;
+      if(blk){ sb.innerHTML='<div class="lbl">伝票コード</div>'; sb.appendChild(blk); } }
     let prevG=null, tb=tb0;
     s.items.forEach((it,ii)=>{
       const exps=it.exps?[...it.exps.entries()].sort((a,b)=>a[0]<b[0]?-1:1):[];
@@ -529,8 +549,8 @@ function render(){
         tb.appendChild(r);
       });
       const bc=tr.querySelector(".bc"), pick=pickBarcode(it);
-      const svg=pick?barcodeSVG(pick.val):null;
-      if(svg){ if(pick.lg) bc.innerHTML='<div class="lg">ロジレスコード</div>'; bc.appendChild(svg); }
+      const blk=pick?barcodeBlock(pick.val):null;
+      if(blk){ if(pick.lg) bc.innerHTML='<div class="lg">ロジレスコード</div>'; bc.appendChild(blk); }
       else bc.innerHTML=`<div class="none">${pick?"バーコード形式エラー":"バーコード未登録"}</div>`;
       if(split) tb.insertBefore(tr,tb.firstChild); else tb.appendChild(tr);
     });
