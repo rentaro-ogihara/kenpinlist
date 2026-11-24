@@ -1,7 +1,7 @@
 // まとめ検品君 サービスワーカー（更新したら VERSION の数字を上げる）
-const VERSION = "v2";
+const VERSION = "v5";
 const CACHE = "matome-kenpin-" + VERSION;
-const FILES = ["./", "index.html", "manifest.json", "JsBarcode.all.min.js", "products.json", "icon-192.png", "icon-512.png"];
+const FILES = ["./", "index.html", "manifest.json", "JsBarcode.all.min.js", "pdf.min.js", "pdf.worker.min.js", "products.json", "icon-192.png", "icon-512.png"];
 
 self.addEventListener("install", e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES)).then(() => self.skipWaiting()));

@@ -8,6 +8,7 @@
 <link rel="icon" href="icon-192.png">
 <meta name="theme-color" content="#0f172a">
 <script src="JsBarcode.all.min.js"></script>
+<script src="pdf.min.js"></script>
 <style>
 :root{
   --ink:#0f172a; --sub:#475569; --line:#cbd5e1; --bg:#f1f5f9; --card:#fff;
@@ -83,22 +84,44 @@ button{font-family:inherit;cursor:pointer}
 .p-note h3{margin:0 0 1mm;font-size:11pt}
 .p-note div{white-space:pre-wrap;font-size:9.5pt;line-height:1.45}
 
-table.items{width:100%;border-collapse:collapse}
+table.items{width:100%;border-collapse:collapse;table-layout:fixed}
 table.items th{font-size:9.5pt;background:#e5e7eb;border:1px solid #000;padding:1.5mm 2mm;text-align:left}
 table.items td{border:1px solid #000;padding:1.5mm 2mm;vertical-align:middle}
 table.items tr{page-break-inside:avoid;break-inside:avoid}
 table.items tr.gtop td{border-top:2.5px solid #000}
 table.items tr.zebra td{background:#f5f5f5}
-td.chk{width:13mm;text-align:center}
+td.chk{width:11mm;text-align:center}
 td.chk i{display:inline-block;width:8mm;height:8mm;border:2px solid #000;border-radius:1mm;background:#fff}
-td.code{width:33mm;font-family:Consolas,"Courier New",monospace;font-size:10pt;font-weight:700;word-break:break-all}
+td.code{width:28mm;font-family:Consolas,"Courier New",monospace;font-size:9pt;font-weight:700;word-break:break-all}
 td.name{font-size:11pt;line-height:1.35}
-td.name .merged{display:inline-block;margin-top:1mm;font-size:8.5pt;border:1px solid #000;border-radius:1mm;padding:0 1.5mm}
-td.qty{width:22mm;text-align:right;white-space:nowrap}
+td.name .sub{display:flex;flex-wrap:wrap;gap:1mm 2.5mm;align-items:center;margin-top:.6mm}
+td.name .sub:empty{display:none}
+td.name .exp{font-size:9pt;font-weight:700}
+td.name .exp.multi{border:1.5px solid #000;border-radius:1mm;padding:.3mm 1.5mm;display:inline-block}
+.p-title{font-size:12pt;font-weight:700;margin-left:3mm}
+.p-check{font-size:9.5pt;margin-top:1mm}
+.p-check.bad{font-weight:700;border:2px solid #000;padding:1mm 2mm}
+/* 出荷期限が割れている商品 */
+table.items tbody.split{break-inside:avoid;page-break-inside:avoid}
+table.items tbody.split tr:first-child td{border-top:3.5px solid #000}
+table.items tbody.split tr td:first-child{border-left:3.5px solid #000}
+table.items tbody.split tr td:last-child{border-right:3.5px solid #000}
+table.items tbody.split tr.last td{border-bottom:3.5px solid #000}
+table.items tbody.split tr:first-child td{border-bottom:1px dashed #000}
+table.items tr.exprow td{background:#fff;padding-top:1mm;padding-bottom:1mm;border-top:1px dashed #000;border-bottom:1px dashed #000}
+table.items tr.exprow td.chk i{width:6.5mm;height:6.5mm}
+td.expcell{font-size:10pt;font-weight:700;padding-left:8mm!important;text-align:right}
+td.expd{text-align:center;font-size:14pt;font-weight:700;white-space:nowrap;padding-left:1mm!important;padding-right:1mm!important}
+td.expd.multi{font-size:10.5pt;font-family:inherit;line-height:1.2}
+tr.exprow td.expd{font-size:14pt}
+table.items tr.exprow td.qty b{font-size:17pt}
+td.qty .tot{display:block;font-size:8.5pt;font-weight:700;text-align:right;line-height:1}
+td.name .merged{display:inline-block;font-size:8.5pt;border:1px solid #000;border-radius:1mm;padding:0 1.5mm}
+td.qty{width:19mm;text-align:right;white-space:nowrap}
 td.qty b{font-size:20pt}
 td.qty small{font-size:9pt}
-td.bc{width:52mm;text-align:center;padding:1mm}
-td.bc svg{width:48mm;height:15mm;display:block;margin:0 auto}
+td.bc{width:45mm;text-align:center;padding:1mm}
+td.bc svg{width:43mm;height:15mm;display:block;margin:0 auto}
 td.bc .lg{display:inline-block;font-size:7.5pt;font-weight:700;background:#000;color:#fff;padding:0 2mm;border-radius:1mm;margin-bottom:.5mm;-webkit-print-color-adjust:exact;print-color-adjust:exact}
 td.bc .none{font-size:9pt;border:1.5px dashed #000;padding:2mm;font-weight:700}
 .cont{font-size:9pt;color:#333;font-weight:400;background:#fff!important;border:0!important;padding:0 0 1mm!important}
@@ -151,12 +174,12 @@ dialog::backdrop{background:rgba(15,23,42,.6)}
 
 <main class="wrap">
   <section class="step noprint" id="step1">
-    <h2 class="step-title"><span class="num">1</span>CSVファイルを入れる</h2>
+    <h2 class="step-title"><span class="num">1</span>CSV または 出荷指示書PDF を入れる</h2>
     <div class="drop" id="drop">
       <div class="arrow">⬇</div>
-      <div class="big">ここにCSVをドラッグ</div>
-      <div class="small">または ここをクリックしてファイルを選ぶ<br>（LOGILESSの「OutboundDeliveryLine」ではじまるCSV）</div>
-      <input type="file" id="file" accept=".csv,text/csv" hidden>
+      <div class="big">ここにファイルをドラッグ</div>
+      <div class="small">または ここをクリックしてファイルを選ぶ<br>（LOGILESSの「OutboundDeliveryLine」ではじまるCSV／出荷指示書のPDF）</div>
+      <input type="file" id="file" accept=".csv,text/csv,.pdf,application/pdf" hidden>
     </div>
     <div class="loaded" id="loaded">
       <div class="file" id="fileName"></div>
@@ -277,17 +300,97 @@ function buildSlips(rows){
     const lgCode = lgIdx>=0 ? (r[lgIdx]||"").trim() : "";
     const q=parseInt(g("数量")(r).replace(/[^\d-]/g,""),10)||0;
     total+=q;
-    if(!s.items.has(pc)) s.items.set(pc,{code:pc,name:pn,qty:0,parts:[],csvBc:"",lgCode:""});
-    const it=s.items.get(pc); it.qty+=q; it.parts.push(q);
-    if(csvBc && !it.csvBc) it.csvBc=csvBc;
-    if(lgCode && !it.lgCode) it.lgCode=lgCode;
+    addItem(s.items,{code:pc,name:pn,qty:q,csvBc,lgCode,exp:""});
   }
-  const list=[...slips.values()].map(s=>{
+  return {slips:finishSlips(slips),lineCount,total,hasLg:lgIdx>=0};
+}
+
+/* 同じ商品コードを1行にまとめる（出荷期限日ごとの内訳も持つ） */
+function addItem(map,r){
+  if(!map.has(r.code)) map.set(r.code,{code:r.code,name:r.name,qty:0,parts:[],exps:new Map(),csvBc:"",lgCode:""});
+  const it=map.get(r.code); it.qty+=r.qty; it.parts.push(r.qty);
+  if(r.exp) it.exps.set(r.exp,(it.exps.get(r.exp)||0)+r.qty);
+  if(r.csvBc && !it.csvBc) it.csvBc=r.csvBc;
+  if(r.lgCode && !it.lgCode) it.lgCode=r.lgCode;
+}
+function finishSlips(slips){
+  return [...slips.values()].map(s=>{
     const items=[...s.items.values()].map(it=>({...it,genre:genreOf(it.code,it.name)}));
     items.sort((a,b)=>a.genre-b.genre || collator.compare(a.code,b.code));
     return {...s,items};
   });
-  return {slips:list,lineCount,total,hasLg:lgIdx>=0};
+}
+
+/* ---------- 出荷指示書PDF ---------- */
+if(window.pdfjsLib) pdfjsLib.GlobalWorkerOptions.workerSrc="pdf.worker.min.js";
+async function parsePDF(buf){
+  if(!window.pdfjsLib) throw new Error("PDFを読む部品が読み込めませんでした。ネットにつないで開き直してください。");
+  const doc=await pdfjsLib.getDocument({data:buf}).promise;
+  const slips=new Map(); let lineCount=0, total=0, lastCode=null;
+  for(let pn=1;pn<=doc.numPages;pn++){
+    const page=await doc.getPage(pn);
+    const tc=await page.getTextContent();
+    const T=tc.items.filter(i=>i.str.trim()).map(i=>({s:i.str.trim(),x:i.transform[4],y:i.transform[5]}));
+    const find=re=>T.find(t=>re.test(t.s));
+    const hCode=find(/^商品コード$/), hName=find(/^商品名$/), hLoc=find(/^ロケーション$/), hQty=find(/^数量$/);
+    if(!hCode||!hName||!hQty||!find(/^出荷指示書$/)){
+      if(pn===1) throw new Error("出荷指示書のPDFではないようです。LOGILESSの「出荷指示書」のPDFを入れてください。");
+      continue;
+    }
+    const topY=hCode.y;
+    // ---- 上の部分（伝票コード・お届け先・配送方法・合計数量・特記事項・見出し）
+    const titleItem=find(/^出荷指示書$/);
+    const title=T.filter(t=>Math.abs(t.y-titleItem.y)<4 && t.x>titleItem.x && !/^\d+\s*\/\s*\d+$/.test(t.s))
+      .sort((a,b)=>a.x-b.x).map(t=>t.s).join(" ").replace(/^:\s*/,"").trim();
+    const slipItem=T.find(t=>t.y>topY && /^\d{10,20}$/.test(t.s));
+    const code=slipItem?slipItem.s:(lastCode||"伝票"+pn);
+    const sumLbl=find(/^合計数量/);
+    let dest="",method="",pdfTotal=null;
+    if(sumLbl){
+      const left=T.filter(t=>t.y>topY && t.x<sumLbl.x-5 && t.x>(slipItem?slipItem.x+40:0) && Math.abs(t.y-sumLbl.y)<15).sort((a,b)=>b.y-a.y);
+      dest=(left[0]||{}).s||""; method=(left[1]||{}).s||"";
+      const n=T.find(t=>Math.abs(t.x-sumLbl.x)<20 && t.y<sumLbl.y && t.y>sumLbl.y-20 && /^[\d,]+$/.test(t.s));
+      if(n) pdfTotal=parseInt(n.s.replace(/,/g,""),10);
+    }
+    const noteLbl=find(/^出荷指示書\s*特記事項/);
+    let note="";
+    if(noteLbl){
+      const lines=T.filter(t=>t.y>topY && t.x>noteLbl.x+40 && t.y<(sumLbl?sumLbl.y-20:9999)).sort((a,b)=>b.y-a.y);
+      let prev=null;
+      lines.forEach(l=>{ if(prev!==null && prev-l.y>15) note+="\n"; note+=(note?"\n":"")+l.s; prev=l.y; });
+      note=note.replace(/^"+|"+$/g,"").trim();
+    }
+    if(!slips.has(code)) slips.set(code,{code,dest,method,note,title,pdfTotal,date:"",time:"",boxes:"",items:new Map()});
+    lastCode=code;
+    const s=slips.get(code);
+    // ---- 表の部分
+    const xName=hCode.x+50, xLoc=hLoc?hLoc.x-15:hQty.x-40, xQty=hQty.x-8;
+    const body=T.filter(t=>t.y<topY-3 && !/ページ目$/.test(t.s) && !/^\d{4}\/\d{2}\/\d{2} \d{2}:\d{2}/.test(t.s) && !/^Powered by/.test(t.s));
+    const anchors=body.filter(t=>t.x>=xQty && /^[\d,]+$/.test(t.s)).sort((a,b)=>b.y-a.y);
+    anchors.forEach((a,i)=>{
+      const top=a.y+6, bottom=i+1<anchors.length?anchors[i+1].y+6:-1;
+      const inRow=body.filter(t=>t.y<=top && t.y>bottom).sort((p,q)=>q.y-p.y);
+      const codeL=inRow.filter(t=>t.x<xName).map(t=>t.s);
+      // 商品名：同じ高さの文字はスペースでつなぎ、折り返しはそのままつなぐ
+      const nameL=[];
+      inRow.filter(t=>t.x>=xName && t.x<xLoc).sort((p,q)=>(q.y-p.y)||(p.x-q.x)).forEach(t=>{
+        const last=nameL[nameL.length-1];
+        if(last && Math.abs(last.y-t.y)<2) last.s+=" "+t.s; else nameL.push({y:t.y,s:t.s});
+      });
+      let lg="",bc="";
+      if(codeL.length>1 && /^20\d{11}$/.test(codeL[codeL.length-1])) lg=codeL.pop();
+      if(codeL.length>1 && /^(\d{8}|\d{12,14}|X0[0-9A-Z]{8})$/.test(codeL[codeL.length-1])) bc=codeL.pop();
+      const pc=codeL.join("");
+      let exp=""; const nm=[];
+      nameL.map(l=>l.s).forEach(l=>{ const m=l.match(/出荷期限日\s*[:：]\s*(\S+)/); if(m) exp=m[1]; else nm.push(l); });
+      const q=parseInt(a.s.replace(/,/g,""),10)||0;
+      if(!pc) return;
+      lineCount++; total+=q;
+      addItem(s.items,{code:pc,name:nm.join(""),qty:q,csvBc:bc,lgCode:lg,exp});
+    });
+  }
+  if(!slips.size) throw new Error("出荷指示書の中に商品が見つかりませんでした。");
+  return {slips:finishSlips(slips),lineCount,total,hasLg:true,isPdf:true};
 }
 
 /* ---------- バーコード ---------- */
@@ -328,6 +431,13 @@ function missingCodes(){
   return [...m.entries()];
 }
 
+const sumOf=s=>s.items.reduce((a,b)=>a+b.qty,0);
+function expHtml(it){
+  if(!it.exps || !it.exps.size) return "";
+  const e=[...it.exps.entries()].sort((a,b)=>a[0]<b[0]?-1:1);
+  if(e.length===1) return `<span class="exp">出荷期限 ${esc(e[0][0])}</span>`;
+  return `<span class="exp multi">期限が${e.length}種類：${e.map(([d,q])=>esc(d)+" × "+q+"個").join("　／　")}</span>`;
+}
 function render(){
   const {slips,lineCount,total}=current;
   const itemRows=slips.reduce((a,s)=>a+s.items.length,0);
@@ -345,6 +455,9 @@ function render(){
     : `<div class="alert ok"><span class="ic">✔</span><div class="msg">読み込みOK。重なっている商品はありませんでした。</div></div>`;
   if(lgUsed.size) html+=`<div class="alert ok"><span class="ic">ℹ</span><div class="msg">商品バーコードが無い <b>${lgUsed.size}種類</b> は、ロジレスコードのバーコードを印刷します（「ロジレスコード」と表示）。</div></div>`;
   if(miss.length) html+=`<div class="alert warn"><span class="ic">⚠</span><div class="msg">バーコードが登録されていない商品が <b>${miss.length}種類</b> あります。<br>そのまま印刷できますが、その商品はバーコードが出ません。${current.hasLg?"":"<br><b>※このCSVには「ロジレスコード」の列がありません。ロジレスコード入りの設定でCSVを出し直すと、すべてバーコードが出ます。</b>"}</div><button id="warnReg">登録する</button></div>`;
+  const bad=slips.filter(s=>s.pdfTotal!=null && s.pdfTotal!==sumOf(s));
+  if(bad.length) html=`<div class="alert err"><span class="ic">✖</span><div class="msg"><b>合計数量が出荷指示書と合いません！</b><br>${bad.map(s=>esc(s.dest||s.code)+"：出荷指示書 "+s.pdfTotal+"個 ／ 読み取り "+sumOf(s)+"個").join("<br>")}<br>このまま使わず、荻原に連絡してください。</div></div>`+html;
+  else if(slips.some(s=>s.pdfTotal!=null)) html+=`<div class="alert ok"><span class="ic">✔</span><div class="msg">出荷指示書の合計数量と、すべて一致しました。</div></div>`;
   $("result").innerHTML=html;
   const wr=$("warnReg"); if(wr) wr.onclick=openReg;
 
@@ -352,10 +465,11 @@ function render(){
   slips.forEach((s,si)=>{
     const p=document.createElement("div"); p.className="page";
     const when=[s.date&&s.date.replace(/-/g,"/"), s.time].filter(Boolean).join(" ");
+    const hasExp=s.items.some(it=>it.exps && it.exps.size);
     p.innerHTML=`
       <div class="p-head">
         <div>
-          <span class="p-kind">検品リスト（重複まとめ済み）</span>
+          <span class="p-kind">検品リスト（重複まとめ済み）</span>${s.title?`<span class="p-title">${esc(s.title)}</span>`:""}
           <div class="p-dest">${esc(s.dest||"（お届け先なし）")} 様</div>
           <div class="p-meta">
             <span>伝票コード <b>${esc(s.code)}</b></span>
@@ -368,33 +482,56 @@ function render(){
       </div>
       ${s.note?`<div class="p-note"><h3>⚠ 特記事項（必ず読む）</h3><div>${esc(s.note)}</div></div>`:""}
       <table class="items">
+        <colgroup><col style="width:10mm"><col style="width:30mm"><col>${hasExp?'<col style="width:31mm">':""}<col style="width:17mm"><col style="width:47mm"></colgroup>
         <thead>
-          <tr><th colspan="5" class="cont">${esc(s.dest)} ／ 伝票 ${esc(s.code)}</th></tr>
-          <tr><th>✓</th><th>商品コード</th><th>商品名</th><th style="text-align:right">数量</th><th style="text-align:center">バーコード</th></tr>
+          <tr><th colspan="${hasExp?6:5}" class="cont">${esc(s.dest)} ／ 伝票 ${esc(s.code)}</th></tr>
+          <tr><th>✓</th><th>商品コード</th><th>商品名</th>${hasExp?'<th style="text-align:center">出荷期限</th>':""}<th style="text-align:right">数量</th><th style="text-align:center">バーコード</th></tr>
         </thead>
         <tbody></tbody>
       </table>
       <div class="p-foot">
-        <div class="p-total">${s.items.length}品目　合計 <b>${s.items.reduce((a,b)=>a+b.qty,0).toLocaleString()}</b> 個</div>
+        <div><div class="p-total">${s.items.length}品目　合計 <b>${sumOf(s).toLocaleString()}</b> 個</div>
+        ${s.pdfTotal!=null?(s.pdfTotal===sumOf(s)?`<div class="p-check">✔ 出荷指示書の合計数量 ${s.pdfTotal} と一致</div>`:`<div class="p-check bad">⚠ 出荷指示書の合計数量 ${s.pdfTotal} と合いません（差 ${sumOf(s)-s.pdfTotal}）</div>`):""}</div>
         <div class="p-sign"><div>1人目チェック</div><div>2人目チェック</div></div>
       </div>`;
-    const tb=p.querySelector("tbody");
-    let prevG=null;
+    const table=p.querySelector("table.items"), tb0=p.querySelector("tbody");
+    let prevG=null, tb=tb0;
     s.items.forEach((it,ii)=>{
+      const exps=it.exps?[...it.exps.entries()].sort((a,b)=>a[0]<b[0]?-1:1):[];
+      const split=exps.length>1;
+      // 期限が割れている商品は、太枠でかこんだ1つのかたまり（ページをまたがない）にする
+      if(split){ tb=document.createElement("tbody"); tb.className="split"; table.appendChild(tb); }
+      else if(tb!==tb0 && tb.className==="split"){ tb=document.createElement("tbody"); table.appendChild(tb); }
       const tr=document.createElement("tr");
       if(prevG!==null && it.genre!==prevG) tr.classList.add("gtop");
       if(ii%2) tr.classList.add("zebra");
       prevG=it.genre;
+      const sub = split
+        ? `<span class="exp">期限${exps.length}種類 ▼下の行で確認</span>`
+        : `${it.parts.length>1?`<span class="merged">${it.parts.length}行をまとめ（${it.parts.join("＋")}）</span>`:""}`;
+      const expTd = !hasExp ? "" : split
+        ? `<td class="expd multi">${exps.length}種類<br>▼</td>`
+        : `<td class="expd">${exps.length?esc(exps[0][0]):"―"}</td>`;
       tr.innerHTML=`<td class="chk"><i></i></td>
         <td class="code">${esc(it.code)}</td>
-        <td class="name">${esc(it.name)}${it.parts.length>1?`<br><span class="merged">${it.parts.length}行をまとめ（${it.parts.join("＋")}）</span>`:""}</td>
-        <td class="qty"><b>${it.qty.toLocaleString()}</b><small>個</small></td>
+        <td class="name">${esc(it.name)}<div class="sub">${sub}</div></td>
+        ${expTd}
+        <td class="qty">${split?'<span class="tot">合計</span>':""}<b>${it.qty.toLocaleString()}</b><small>個</small></td>
         <td class="bc"></td>`;
+      if(split) exps.forEach(([d,q],k)=>{
+        const r=document.createElement("tr"); r.className="exprow"+(k===exps.length-1?" last":"");
+        r.innerHTML=`<td class="chk"><i></i></td>
+          <td colspan="2" class="expcell">└ 期限${k+1}つ目</td>
+          <td class="expd">${esc(d)}</td>
+          <td class="qty"><b>${q.toLocaleString()}</b><small>個</small></td>
+          <td></td>`;
+        tb.appendChild(r);
+      });
       const bc=tr.querySelector(".bc"), pick=pickBarcode(it);
       const svg=pick?barcodeSVG(pick.val):null;
       if(svg){ if(pick.lg) bc.innerHTML='<div class="lg">ロジレスコード</div>'; bc.appendChild(svg); }
       else bc.innerHTML=`<div class="none">${pick?"バーコード形式エラー":"バーコード未登録"}</div>`;
-      tb.appendChild(tr);
+      if(split) tb.insertBefore(tr,tb.firstChild); else tb.appendChild(tr);
     });
     pages.appendChild(p);
   });
@@ -417,9 +554,15 @@ async function loadFile(file){
   $("drop").style.display="none"; $("loaded").style.display="flex";
   $("fileName").innerHTML=`📄 ${esc(file.name)}<span>${new Date(file.lastModified).toLocaleString("ja-JP")}</span>`;
   try{
-    const rows=parseCSV(decode(await file.arrayBuffer()));
-    if(rows.length<2) throw new Error("CSVの中身が空です。");
-    current=buildSlips(rows);
+    const buf=await file.arrayBuffer();
+    const head=new Uint8Array(buf.slice(0,5));
+    if(/\.pdf$/i.test(file.name) || String.fromCharCode(...head)==="%PDF-"){
+      current=await parsePDF(buf);
+    }else{
+      const rows=parseCSV(decode(buf));
+      if(rows.length<2) throw new Error("CSVの中身が空です。");
+      current=buildSlips(rows);
+    }
     if(!current.slips.length) throw new Error("出荷データが1件もありません。");
     render();
   }catch(e){ showError(e.message||String(e)); }
