@@ -1,0 +1,480 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>まとめ検品君</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<meta name="theme-color" content="#0f172a">
+<script src="JsBarcode.all.min.js"></script>
+<style>
+:root{
+  --ink:#0f172a; --sub:#475569; --line:#cbd5e1; --bg:#f1f5f9; --card:#fff;
+  --blue:#2563eb; --green:#16a34a; --red:#dc2626; --yellow:#fde68a;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:"BIZ UDPGothic","Meiryo","Yu Gothic UI","Hiragino Sans",sans-serif;}
+button{font-family:inherit;cursor:pointer}
+
+/* ===== 画面 ===== */
+.top{background:var(--ink);color:#fff;display:flex;align-items:center;gap:14px;padding:12px 24px}
+.top img{width:40px;height:40px;border-radius:8px}
+.top h1{font-size:24px;margin:0;letter-spacing:.05em}
+.top .spacer{flex:1}
+.btn-sub{background:#334155;color:#fff;border:0;border-radius:8px;padding:10px 16px;font-size:15px}
+.btn-sub:hover{background:#475569}
+
+.wrap{max-width:1000px;margin:0 auto;padding:24px}
+.step{background:var(--card);border-radius:16px;padding:24px;margin-bottom:20px;
+  box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.step-title{display:flex;align-items:center;gap:14px;font-size:24px;font-weight:700;margin:0 0 16px}
+.num{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:50%;
+  background:var(--blue);color:#fff;font-size:24px;font-weight:700;flex:none}
+.step.done .num{background:var(--green)}
+.step.off{opacity:.45;pointer-events:none}
+
+.drop{border:4px dashed #93c5fd;border-radius:16px;background:#eff6ff;padding:48px 20px;text-align:center;cursor:pointer;transition:.15s}
+.drop:hover,.drop.over{background:#dbeafe;border-color:var(--blue)}
+.drop .big{font-size:28px;font-weight:700;color:var(--blue)}
+.drop .small{font-size:17px;color:var(--sub);margin-top:10px}
+.drop .arrow{font-size:56px;line-height:1;margin-bottom:8px}
+
+.loaded{display:none;align-items:center;gap:16px;flex-wrap:wrap}
+.loaded .file{font-size:18px;font-weight:700;flex:1;word-break:break-all}
+.loaded .file span{display:block;font-size:14px;color:var(--sub);font-weight:400}
+
+.stats{display:flex;gap:14px;flex-wrap:wrap;margin:18px 0 0}
+.stat{flex:1;min-width:150px;background:var(--bg);border-radius:12px;padding:14px 16px;text-align:center}
+.stat b{display:block;font-size:40px;line-height:1.1}
+.stat span{font-size:16px;color:var(--sub)}
+
+.alert{border-radius:12px;padding:16px 18px;font-size:17px;margin-top:16px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.alert.err{background:#fee2e2;color:#7f1d1d;border:2px solid var(--red)}
+.alert.warn{background:#fef3c7;color:#78350f;border:2px solid #f59e0b}
+.alert.ok{background:#dcfce7;color:#14532d;border:2px solid var(--green)}
+.alert .ic{font-size:28px}
+.alert .msg{flex:1}
+.alert button{background:#fff;border:2px solid currentColor;color:inherit;border-radius:8px;padding:8px 14px;font-size:16px;font-weight:700}
+
+.print-btn{width:100%;background:var(--green);color:#fff;border:0;border-radius:16px;padding:26px;font-size:32px;font-weight:700;
+  box-shadow:0 4px 0 #15803d}
+.print-btn:hover{background:#15803d}
+.print-btn:active{transform:translateY(3px);box-shadow:0 1px 0 #15803d}
+.hint{text-align:center;color:var(--sub);font-size:15px;margin-top:12px}
+
+.preview-title{font-size:18px;font-weight:700;color:var(--sub);margin:28px 0 12px}
+#pages .page{background:#fff;box-shadow:0 2px 10px rgba(0,0,0,.15);margin:0 auto 24px;width:210mm;min-height:297mm;padding:10mm}
+
+/* ===== 帳票（画面プレビューと印刷で共通） ===== */
+.page{font-size:11pt;color:#000}
+.p-head{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #000;padding-bottom:3mm;margin-bottom:3mm}
+.p-kind{font-size:10pt;font-weight:700;border:2px solid #000;padding:1mm 3mm;display:inline-block}
+.p-dest{font-size:20pt;font-weight:700;margin:2mm 0 1mm;line-height:1.25}
+.p-meta{font-size:10.5pt;display:flex;gap:5mm;flex-wrap:wrap}
+.p-meta b{font-size:11.5pt}
+.p-count{text-align:right;flex:none;margin-left:6mm}
+.p-count .of{font-size:10pt}
+.p-count .n{font-size:26pt;font-weight:700;line-height:1}
+.p-count svg{display:block;margin-top:2mm;margin-left:auto}
+
+.p-note{border:2.5px solid #000;border-radius:2mm;padding:2mm 3mm;margin-bottom:3mm}
+.p-note h3{margin:0 0 1mm;font-size:11pt}
+.p-note div{white-space:pre-wrap;font-size:9.5pt;line-height:1.45}
+
+table.items{width:100%;border-collapse:collapse}
+table.items th{font-size:9.5pt;background:#e5e7eb;border:1px solid #000;padding:1.5mm 2mm;text-align:left}
+table.items td{border:1px solid #000;padding:1.5mm 2mm;vertical-align:middle}
+table.items tr{page-break-inside:avoid;break-inside:avoid}
+table.items tr.gtop td{border-top:2.5px solid #000}
+table.items tr.zebra td{background:#f5f5f5}
+td.chk{width:13mm;text-align:center}
+td.chk i{display:inline-block;width:8mm;height:8mm;border:2px solid #000;border-radius:1mm;background:#fff}
+td.code{width:33mm;font-family:Consolas,"Courier New",monospace;font-size:10pt;font-weight:700;word-break:break-all}
+td.name{font-size:11pt;line-height:1.35}
+td.name .merged{display:inline-block;margin-top:1mm;font-size:8.5pt;border:1px solid #000;border-radius:1mm;padding:0 1.5mm}
+td.qty{width:22mm;text-align:right;white-space:nowrap}
+td.qty b{font-size:20pt}
+td.qty small{font-size:9pt}
+td.bc{width:52mm;text-align:center;padding:1mm}
+td.bc svg{width:48mm;height:15mm;display:block;margin:0 auto}
+td.bc .lg{display:inline-block;font-size:7.5pt;font-weight:700;background:#000;color:#fff;padding:0 2mm;border-radius:1mm;margin-bottom:.5mm;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+td.bc .none{font-size:9pt;border:1.5px dashed #000;padding:2mm;font-weight:700}
+.cont{font-size:9pt;color:#333;font-weight:400;background:#fff!important;border:0!important;padding:0 0 1mm!important}
+
+.p-foot{display:flex;justify-content:space-between;align-items:flex-end;margin-top:4mm;gap:6mm}
+.p-total{font-size:13pt;border:2.5px solid #000;padding:2mm 4mm}
+.p-total b{font-size:20pt}
+.p-sign{display:flex;gap:3mm}
+.p-sign div{border:1.5px solid #000;width:32mm;height:16mm;font-size:9pt;padding:1mm 2mm}
+
+/* ===== 登録画面 ===== */
+dialog{border:0;border-radius:16px;padding:0;width:min(760px,94vw);max-height:90vh}
+dialog::backdrop{background:rgba(15,23,42,.6)}
+.dlg-h{background:var(--ink);color:#fff;padding:16px 22px;font-size:20px;font-weight:700;display:flex;align-items:center}
+.dlg-h span{flex:1}
+.dlg-h button{background:transparent;color:#fff;border:0;font-size:28px;line-height:1}
+.dlg-b{padding:20px 22px;overflow:auto;max-height:calc(90vh - 140px)}
+.dlg-b p{margin:0 0 14px;font-size:15px;color:var(--sub);line-height:1.6}
+.reg-row{display:grid;grid-template-columns:1fr 220px;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
+.reg-row .c{font-family:Consolas,monospace;font-weight:700}
+.reg-row .n{font-size:14px;color:var(--sub)}
+.reg-row input{font-size:18px;padding:10px;border:2px solid var(--line);border-radius:8px;font-family:Consolas,monospace;width:100%}
+.reg-row input:focus{outline:none;border-color:var(--blue)}
+.dlg-f{padding:14px 22px;border-top:1px solid var(--line);display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap}
+.btn{border:0;border-radius:10px;padding:12px 20px;font-size:17px;font-weight:700}
+.btn.p{background:var(--blue);color:#fff}
+.btn.g{background:#e2e8f0;color:var(--ink)}
+.empty{font-size:17px;text-align:center;padding:24px;color:var(--green);font-weight:700}
+
+@page{size:A4 portrait;margin:8mm}
+@media print{
+  body{background:#fff}
+  .noprint{display:none!important}
+  .wrap{max-width:none;padding:0}
+  #pages .page{box-shadow:none;margin:0;width:auto;min-height:0;padding:0;page-break-after:always;break-after:page}
+  #pages .page:last-child{page-break-after:auto;break-after:auto}
+  body,table.items th,table.items tr.zebra td{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
+@media screen and (max-width:860px){ #pages{display:none} .preview-title{display:none} }
+</style>
+</head>
+<body>
+
+<header class="top noprint">
+  <img src="icon-192.png" alt="">
+  <h1>まとめ検品君</h1>
+  <div class="spacer"></div>
+  <button class="btn-sub" id="openReg">バーコード登録</button>
+</header>
+
+<main class="wrap">
+  <section class="step noprint" id="step1">
+    <h2 class="step-title"><span class="num">1</span>CSVファイルを入れる</h2>
+    <div class="drop" id="drop">
+      <div class="arrow">⬇</div>
+      <div class="big">ここにCSVをドラッグ</div>
+      <div class="small">または ここをクリックしてファイルを選ぶ<br>（LOGILESSの「OutboundDeliveryLine」ではじまるCSV）</div>
+      <input type="file" id="file" accept=".csv,text/csv" hidden>
+    </div>
+    <div class="loaded" id="loaded">
+      <div class="file" id="fileName"></div>
+      <button class="btn g" id="again">別のCSVを入れる</button>
+    </div>
+    <div id="result"></div>
+  </section>
+
+  <section class="step noprint off" id="step2">
+    <h2 class="step-title"><span class="num">2</span>印刷する</h2>
+    <button class="print-btn" id="printBtn">🖨 印刷する</button>
+    <div class="hint">印刷画面が出たら「A4」「縦」を確認して印刷してください</div>
+  </section>
+
+  <div class="preview-title noprint" id="pvTitle" hidden>▼ 印刷されるもの（見本）</div>
+  <div id="pages"></div>
+</main>
+
+<dialog id="reg">
+  <div class="dlg-h"><span>バーコード登録</span><button id="regClose" aria-label="閉じる">×</button></div>
+  <div class="dlg-b">
+    <p>バーコードが出ない商品に、JAN（13けたの数字）か FNSKU（X00〜ではじまる10文字）を入れて「保存」してください。<br>
+    保存した内容はこのパソコンにだけ記録されます。全員のパソコンに反映するには「products.jsonを書き出す」でファイルを作り、GitHubに上書きしてください。</p>
+    <div id="regList"></div>
+  </div>
+  <div class="dlg-f">
+    <button class="btn g" id="regExport">products.jsonを書き出す</button>
+    <button class="btn p" id="regSave">保存</button>
+  </div>
+</dialog>
+
+<script>
+"use strict";
+/* ---------- 商品マスタ（商品コード → JAN / FNSKU） ---------- */
+const BUILTIN = {"VITAS001_JAN":"4589463560215","VITAS002":"X0010LLWPP","VITAS003":"X0010LM85D","VITAS005":"X0010WD2P7","VITAS006_450g":"4589463562097","VITAS008_450g":"4589463562134","VITAS009_600":"4589463561502","VITAS010":"X00130BT9R","VITAS011":"X0013DDBSV","VITAS012_450g":"4589463562110","VITAS013":"X0013NN523","VITAS017_450g":"4589463562103","VITAS018":"X0016HIBBV","VITAS019":"4589463561212","VITAS024_450g":"4589463562080","VITAS026":"4589463561724","VITAS027":"4589463561717","VITAS028":"4589463561731","VITAS031":"4589463562028","VITAS032":"4589463562011","VITAS034":"4589463562172","VITAS035_450g":"4589463562127","VITAS036_450g":"4589463562141","VITAS037_450g":"4589463562158","v-shaker500":"4589463560758"};
+const LS_KEY = "matome-kenpin-barcodes";
+let master = {...BUILTIN};
+function lsGet(){ try{ return JSON.parse(localStorage.getItem(LS_KEY)||"{}"); }catch(e){ return {}; } }
+function lsSet(o){ try{ localStorage.setItem(LS_KEY, JSON.stringify(o)); return true; }catch(e){ return false; } }
+function rebuildMaster(remote){
+  master = {...BUILTIN, ...(remote||{}), ...lsGet()};
+  delete master._説明;
+}
+let remoteMaster = null;
+fetch("products.json",{cache:"no-cache"}).then(r=>r.ok?r.json():null).then(j=>{
+  if(j){ remoteMaster=j; rebuildMaster(j); if(current) render(); }
+}).catch(()=>{});
+rebuildMaster(null);
+
+/* ---------- 表示順（ジャンル） ---------- */
+const GENRES = [
+  {name:"プロテイン450g",   test:(c,n)=>/_450g$/i.test(c) || (/プロテイン/.test(n) && /450g/i.test(n) && !/ソイ/.test(n))},
+  {name:"ソイプロテイン",   test:(c,n)=>/ソイプロテイン/.test(n)},
+  {name:"個包装",           test:(c,n)=>/mini/i.test(c) || /個包装/.test(n)},
+  {name:"EAA",              test:(c,n)=>/EAA/i.test(n)},
+  {name:"サプリ",           test:(c,n)=>/クレアチン|シトルリン|アルギニン|グルタミン|クレアルカリン|VITA ?POWER|vitafit|VINOBBY/i.test(n) || /^vitafit/i.test(c)},
+  {name:"マグケーキ・ソイーツ", test:(c,n)=>/マグケーキ|ソイーツ/.test(n) || /^yomemoro/i.test(c)},
+  {name:"付属品",           test:(c,n)=>/スプーン|シェイカー|シール/.test(n) || /sticker|^SPN|shaker/i.test(c)},
+];
+// 付属品・個包装の判定を先にする（例：ソイーツ用ATシール → 付属品、ピーチ【個包装】→ 個包装）
+const CHECK_ORDER = [6,2,5,1,0,3,4];
+function genreOf(code,name){
+  for(const i of CHECK_ORDER){ if(GENRES[i].test(code,name)) return i; }
+  return GENRES.length; // その他
+}
+const collator = new Intl.Collator("ja",{numeric:true,sensitivity:"base"});
+
+/* ---------- CSV ---------- */
+function decode(buf){
+  try{ return new TextDecoder("utf-8",{fatal:true}).decode(buf).replace(/^﻿/,""); }
+  catch(e){ return new TextDecoder("shift_jis").decode(buf); }
+}
+function parseCSV(text){
+  const rows=[]; let row=[], f="", q=false;
+  for(let i=0;i<text.length;i++){
+    const ch=text[i];
+    if(q){
+      if(ch==='"'){ if(text[i+1]==='"'){ f+='"'; i++; } else q=false; }
+      else f+=ch;
+    }else{
+      if(ch==='"') q=true;
+      else if(ch===','){ row.push(f); f=""; }
+      else if(ch==='\n'){ row.push(f); rows.push(row); row=[]; f=""; }
+      else if(ch==='\r'){ /* skip */ }
+      else f+=ch;
+    }
+  }
+  if(f!=="" || row.length){ row.push(f); rows.push(row); }
+  return rows.filter(r=>r.some(v=>v.trim()!==""));
+}
+const NEED = ["伝票コード","商品コード","商品名","数量"];
+
+function buildSlips(rows){
+  const head = rows[0].map(h=>h.trim());
+  const idx = {}; head.forEach((h,i)=>{ if(!(h in idx)) idx[h]=i; });
+  // 2つ目の「商品コード」列＝商品のバーコード（JAN / FNSKU）
+  const bcIdx = head.findIndex((h,i)=>h==="商品コード" && i!==idx["商品コード"]);
+  const lgIdx = head.findIndex(h=>/ロジレスコード|LOGILESS ?コード/i.test(h));
+  const miss = NEED.filter(k=>!(k in idx));
+  if(miss.length) throw new Error("このCSVには「"+miss.join("」「")+"」の列がありません。LOGILESSの「OutboundDeliveryLine」ではじまるCSVを入れてください。");
+  const g = k => r => (k in idx ? (r[idx[k]]||"").trim() : "");
+  const slips = new Map(); let lineCount=0, total=0;
+  for(const r of rows.slice(1)){
+    const code=g("伝票コード")(r); if(!code) continue;
+    lineCount++;
+    if(!slips.has(code)){
+      slips.set(code,{
+        code, dest:[g("お届け先名1")(r),g("お届け先名2")(r)].filter(Boolean).join(" "),
+        date:g("お届け希望日")(r), time:g("お届け希望時間帯")(r),
+        method:g("配送方法")(r), boxes:g("梱包数")(r),
+        note:(r[idx["出荷指示書 特記事項"]]||"").replace(/\r/g,"").trim().replace(/^"+|"+$/g,"").trim(),
+        items:new Map()
+      });
+    }
+    const s=slips.get(code);
+    const pc=g("商品コード")(r), pn=g("商品名")(r);
+    const csvBc = bcIdx>=0 ? (r[bcIdx]||"").trim() : "";
+    const lgCode = lgIdx>=0 ? (r[lgIdx]||"").trim() : "";
+    const q=parseInt(g("数量")(r).replace(/[^\d-]/g,""),10)||0;
+    total+=q;
+    if(!s.items.has(pc)) s.items.set(pc,{code:pc,name:pn,qty:0,parts:[],csvBc:"",lgCode:""});
+    const it=s.items.get(pc); it.qty+=q; it.parts.push(q);
+    if(csvBc && !it.csvBc) it.csvBc=csvBc;
+    if(lgCode && !it.lgCode) it.lgCode=lgCode;
+  }
+  const list=[...slips.values()].map(s=>{
+    const items=[...s.items.values()].map(it=>({...it,genre:genreOf(it.code,it.name)}));
+    items.sort((a,b)=>a.genre-b.genre || collator.compare(a.code,b.code));
+    return {...s,items};
+  });
+  return {slips:list,lineCount,total,hasLg:lgIdx>=0};
+}
+
+/* ---------- バーコード ---------- */
+function eanOk(s){
+  if(!/^\d{13}$/.test(s)) return false;
+  let sum=0; for(let i=0;i<12;i++) sum+=(+s[i])*(i%2?3:1);
+  return (10-sum%10)%10===+s[12];
+}
+function barcodeSVG(value){
+  const svg=document.createElementNS("http://www.w3.org/2000/svg","svg");
+  try{
+    JsBarcode(svg,value,{format:eanOk(value)?"EAN13":"CODE128",width:2,height:44,fontSize:15,margin:6,textMargin:1,flat:true});
+    svg.setAttribute("preserveAspectRatio","xMidYMid meet");
+    const w=svg.getAttribute("width"), h=svg.getAttribute("height");
+    svg.setAttribute("viewBox","0 0 "+parseFloat(w)+" "+parseFloat(h));
+    svg.removeAttribute("width"); svg.removeAttribute("height");
+    return svg;
+  }catch(e){ return null; }
+}
+
+/* 使うバーコードを決める：①CSVの商品バーコード → ②登録済み（products.json・手入力） → ③ロジレスコード */
+function pickBarcode(it){
+  if(it.csvBc) return {val:it.csvBc, lg:false};
+  if(master[it.code]) return {val:master[it.code], lg:false};
+  if(it.lgCode) return {val:it.lgCode, lg:true};
+  return null;
+}
+
+/* ---------- 表示 ---------- */
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+let current=null, currentFile="";
+
+function missingCodes(){
+  if(!current) return [];
+  const m=new Map();
+  current.slips.forEach(s=>s.items.forEach(it=>{ if(!pickBarcode(it)) m.set(it.code,it.name); }));
+  return [...m.entries()];
+}
+
+function render(){
+  const {slips,lineCount,total}=current;
+  const itemRows=slips.reduce((a,s)=>a+s.items.length,0);
+  const merged=lineCount-itemRows;
+  const miss=missingCodes();
+  const lgUsed=new Set(); slips.forEach(s=>s.items.forEach(it=>{ const b=pickBarcode(it); if(b&&b.lg) lgUsed.add(it.code); }));
+
+  let html=`<div class="stats">
+    <div class="stat"><b>${slips.length}</b><span>伝票（印刷枚数）</span></div>
+    <div class="stat"><b>${itemRows}</b><span>商品の行</span></div>
+    <div class="stat"><b>${total.toLocaleString()}</b><span>合計個数</span></div>
+  </div>`;
+  html+= merged>0
+    ? `<div class="alert ok"><span class="ic">✔</span><div class="msg">同じ商品が重なっていたので、まとめました（<b>${lineCount}行 → ${itemRows}行</b>）。</div></div>`
+    : `<div class="alert ok"><span class="ic">✔</span><div class="msg">読み込みOK。重なっている商品はありませんでした。</div></div>`;
+  if(lgUsed.size) html+=`<div class="alert ok"><span class="ic">ℹ</span><div class="msg">商品バーコードが無い <b>${lgUsed.size}種類</b> は、ロジレスコードのバーコードを印刷します（「ロジレスコード」と表示）。</div></div>`;
+  if(miss.length) html+=`<div class="alert warn"><span class="ic">⚠</span><div class="msg">バーコードが登録されていない商品が <b>${miss.length}種類</b> あります。<br>そのまま印刷できますが、その商品はバーコードが出ません。${current.hasLg?"":"<br><b>※このCSVには「ロジレスコード」の列がありません。ロジレスコード入りの設定でCSVを出し直すと、すべてバーコードが出ます。</b>"}</div><button id="warnReg">登録する</button></div>`;
+  $("result").innerHTML=html;
+  const wr=$("warnReg"); if(wr) wr.onclick=openReg;
+
+  const pages=$("pages"); pages.innerHTML="";
+  slips.forEach((s,si)=>{
+    const p=document.createElement("div"); p.className="page";
+    const when=[s.date&&s.date.replace(/-/g,"/"), s.time].filter(Boolean).join(" ");
+    p.innerHTML=`
+      <div class="p-head">
+        <div>
+          <span class="p-kind">検品リスト（重複まとめ済み）</span>
+          <div class="p-dest">${esc(s.dest||"（お届け先なし）")} 様</div>
+          <div class="p-meta">
+            <span>伝票コード <b>${esc(s.code)}</b></span>
+            ${when?`<span>お届け希望 <b>${esc(when)}</b></span>`:""}
+            ${s.method?`<span>${esc(s.method)}</span>`:""}
+            ${s.boxes?`<span>梱包数 <b>${esc(s.boxes)}</b></span>`:""}
+          </div>
+        </div>
+        <div class="p-count"><div class="of">伝票</div><div class="n">${si+1}<span style="font-size:14pt">/${slips.length}</span></div></div>
+      </div>
+      ${s.note?`<div class="p-note"><h3>⚠ 特記事項（必ず読む）</h3><div>${esc(s.note)}</div></div>`:""}
+      <table class="items">
+        <thead>
+          <tr><th colspan="5" class="cont">${esc(s.dest)} ／ 伝票 ${esc(s.code)}</th></tr>
+          <tr><th>✓</th><th>商品コード</th><th>商品名</th><th style="text-align:right">数量</th><th style="text-align:center">バーコード</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+      <div class="p-foot">
+        <div class="p-total">${s.items.length}品目　合計 <b>${s.items.reduce((a,b)=>a+b.qty,0).toLocaleString()}</b> 個</div>
+        <div class="p-sign"><div>1人目チェック</div><div>2人目チェック</div></div>
+      </div>`;
+    const tb=p.querySelector("tbody");
+    let prevG=null;
+    s.items.forEach((it,ii)=>{
+      const tr=document.createElement("tr");
+      if(prevG!==null && it.genre!==prevG) tr.classList.add("gtop");
+      if(ii%2) tr.classList.add("zebra");
+      prevG=it.genre;
+      tr.innerHTML=`<td class="chk"><i></i></td>
+        <td class="code">${esc(it.code)}</td>
+        <td class="name">${esc(it.name)}${it.parts.length>1?`<br><span class="merged">${it.parts.length}行をまとめ（${it.parts.join("＋")}）</span>`:""}</td>
+        <td class="qty"><b>${it.qty.toLocaleString()}</b><small>個</small></td>
+        <td class="bc"></td>`;
+      const bc=tr.querySelector(".bc"), pick=pickBarcode(it);
+      const svg=pick?barcodeSVG(pick.val):null;
+      if(svg){ if(pick.lg) bc.innerHTML='<div class="lg">ロジレスコード</div>'; bc.appendChild(svg); }
+      else bc.innerHTML=`<div class="none">${pick?"バーコード形式エラー":"バーコード未登録"}</div>`;
+      tb.appendChild(tr);
+    });
+    pages.appendChild(p);
+  });
+
+  $("pvTitle").hidden=false;
+  $("step1").classList.add("done");
+  $("step2").classList.remove("off");
+  $("printBtn").textContent=`🖨 印刷する（${slips.length}枚）`;
+}
+
+function showError(msg){
+  current=null; $("pages").innerHTML=""; $("pvTitle").hidden=true;
+  $("step1").classList.remove("done"); $("step2").classList.add("off");
+  $("result").innerHTML=`<div class="alert err"><span class="ic">✖</span><div class="msg">${esc(msg)}</div></div>`;
+}
+
+async function loadFile(file){
+  if(!file) return;
+  currentFile=file.name;
+  $("drop").style.display="none"; $("loaded").style.display="flex";
+  $("fileName").innerHTML=`📄 ${esc(file.name)}<span>${new Date(file.lastModified).toLocaleString("ja-JP")}</span>`;
+  try{
+    const rows=parseCSV(decode(await file.arrayBuffer()));
+    if(rows.length<2) throw new Error("CSVの中身が空です。");
+    current=buildSlips(rows);
+    if(!current.slips.length) throw new Error("出荷データが1件もありません。");
+    render();
+  }catch(e){ showError(e.message||String(e)); }
+}
+
+const drop=$("drop"), input=$("file");
+drop.onclick=()=>input.click();
+input.onchange=()=>{ loadFile(input.files[0]); input.value=""; };
+["dragenter","dragover"].forEach(ev=>document.addEventListener(ev,e=>{e.preventDefault(); drop.classList.add("over");}));
+["dragleave","drop"].forEach(ev=>document.addEventListener(ev,e=>{e.preventDefault(); if(ev==="drop"||e.target===drop) drop.classList.remove("over");}));
+document.addEventListener("drop",e=>{ const f=e.dataTransfer&&e.dataTransfer.files[0]; if(f) loadFile(f); });
+$("again").onclick=()=>{ input.click(); };
+$("printBtn").onclick=()=>window.print();
+
+/* ---------- バーコード登録 ---------- */
+const dlg=$("reg");
+function openReg(){
+  const miss=missingCodes();
+  const saved=lsGet();
+  const list=$("regList");
+  const rows=[...miss, ...Object.keys(saved).filter(c=>!miss.some(m=>m[0]===c)).map(c=>[c,"（登録済み）"])];
+  list.innerHTML = rows.length ? rows.map(([c,n])=>`
+    <div class="reg-row"><div><div class="c">${esc(c)}</div><div class="n">${esc(n)}</div></div>
+    <input data-code="${esc(c)}" value="${esc(saved[c]||"")}" placeholder="JAN / FNSKU" inputmode="latin"></div>`).join("")
+    : `<div class="empty">${current?"✔ 今のCSVの商品はすべて登録済みです":"先にCSVを入れると、未登録の商品がここに出ます"}</div>`;
+  dlg.showModal();
+}
+$("openReg").onclick=openReg;
+$("regClose").onclick=()=>dlg.close();
+$("regSave").onclick=()=>{
+  const saved=lsGet(); let bad=[];
+  dlg.querySelectorAll("input[data-code]").forEach(inp=>{
+    const v=inp.value.trim().toUpperCase().replace(/\s/g,""), c=inp.dataset.code;
+    if(!v){ delete saved[c]; return; }
+    if(/^\d{13}$/.test(v) && !eanOk(v)){ bad.push(c); inp.style.borderColor="var(--red)"; return; }
+    saved[c]=v;
+  });
+  if(bad.length){ alertBox("JANの数字がまちがっています（チェックデジット不一致）：\n"+bad.join("\n")); return; }
+  lsSet(saved); rebuildMaster(remoteMaster); dlg.close(); if(current) render();
+};
+$("regExport").onclick=()=>{
+  const out={"_説明":"商品コード → バーコード（JAN または FNSKU）。商品を追加するときは、この一覧に1行追加してGitHubにアップロードしてください。"};
+  Object.keys(master).sort(collator.compare).forEach(k=>out[k]=master[k]);
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(new Blob([JSON.stringify(out,null,2)+"\n"],{type:"application/json"}));
+  a.download="products.json"; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),2000);
+};
+function alertBox(msg){
+  const d=document.createElement("div"); d.className="alert err"; d.innerHTML=`<span class="ic">✖</span><div class="msg" style="white-space:pre-wrap">${esc(msg)}</div>`;
+  const b=dlg.querySelector(".dlg-b"); b.prepend(d); setTimeout(()=>d.remove(),6000);
+}
+
+if("serviceWorker" in navigator && location.protocol.startsWith("http")){
+  navigator.serviceWorker.register("sw.js").catch(()=>{});
+}
+</script>
+</body>
+</html>
