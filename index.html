@@ -59,11 +59,19 @@ button{font-family:inherit;cursor:pointer}
 .alert .msg{flex:1}
 .alert button{background:#fff;border:2px solid currentColor;color:inherit;border-radius:8px;padding:8px 14px;font-size:16px;font-weight:700}
 
+.janbox{margin-top:22px;border-top:2px dashed var(--line);padding-top:18px}
+.janbox h3{margin:0 0 6px;font-size:20px}
+.janbox .jhint{margin:0 0 12px;font-size:15px;color:var(--sub)}
+.janrow{display:flex;gap:14px;align-items:center;justify-content:space-between;flex-wrap:wrap;background:var(--bg);border-radius:12px;padding:12px 14px;margin-bottom:10px}
+.janrow .jl{font-size:16px;flex:1;min-width:240px}
+.janrow .jl span{font-size:14px;color:var(--sub)}
+.janbtn{font-size:18px!important;padding:14px 20px!important}
 .print-btn{width:100%;background:var(--green);color:#fff;border:0;border-radius:16px;padding:26px;font-size:32px;font-weight:700;
   box-shadow:0 4px 0 #15803d}
 .print-btn:hover{background:#15803d}
 .print-btn:active{transform:translateY(3px);box-shadow:0 1px 0 #15803d}
-.hint{text-align:center;color:var(--sub);font-size:15px;margin-top:12px}
+.hint{text-align:center;color:var(--ink);font-size:18px;margin-top:14px;line-height:1.6}
+.hint .bw{background:var(--yellow);padding:2px 8px;border-radius:6px;font-size:20px}
 
 .preview-title{font-size:18px;font-weight:700;color:var(--sub);margin:28px 0 12px}
 #pages .page{background:#fff;box-shadow:0 2px 10px rgba(0,0,0,.15);margin:0 auto 24px;width:210mm;min-height:297mm;padding:10mm}
@@ -84,6 +92,7 @@ button{font-family:inherit;cursor:pointer}
 
 .p-note{border:2.5px solid #000;border-radius:2mm;padding:2mm 3mm;margin-bottom:3mm}
 .p-note h3{margin:0 0 1mm;font-size:11pt}
+.mk{display:inline-block;width:4.2mm;height:4.2mm;line-height:4.2mm;text-align:center;background:#000;color:#fff;border-radius:50%;font-size:9pt;-webkit-print-color-adjust:exact;print-color-adjust:exact}
 .p-note div{white-space:pre-wrap;font-size:9.5pt;line-height:1.45}
 
 table.items{width:100%;border-collapse:collapse;table-layout:fixed}
@@ -119,6 +128,56 @@ td.expd.multi{font-size:10.5pt;font-family:inherit;line-height:1.2}
 tr.exprow td.expd{font-size:13pt}
 table.items tr.exprow td.qty b{font-size:17pt}
 td.qty .tot{display:block;font-size:8.5pt;font-weight:700;text-align:right;line-height:1}
+/* FNSKU商品の行（見せ方は body の fs-a / fs-b / fs-c で切りかえ） */
+tr.fnsku td{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.fnmsg{font-size:9pt;font-weight:700;background:#000;color:#fff;padding:.3mm 2mm;border-radius:1mm;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.fnband{display:none}
+.fs-a col.c-chk.wide{width:17mm!important}
+.fn2,.fnstamp{display:none}
+/* D：チェック欄を2つ（数量OK／JAN貼った） */
+.fs-d col.c-chk.wide{width:15mm!important}
+.fs-d tr.fnsku td.chk{text-align:center}
+.fs-d tr.fnsku .fn2{display:block;margin-top:1.2mm}
+.fs-d tr.fnsku .fn2 i{display:inline-block;width:8mm;height:8mm;border:2px solid #000;border-radius:50%;background:#fff}
+.fs-d tr.fnsku .fn2 em{display:block;font-style:normal;font-size:6.5pt;font-weight:700;line-height:1.1}
+.fs-d tr.fnsku td{border-top:2px solid #000;border-bottom:2px solid #000}
+/* E：FNSKU商品だけ下にまとめて、黒い見出し帯 */
+tr.fnhead td{background:#000!important;color:#fff;font-weight:700;font-size:11pt;padding:2mm 3mm!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.fs-e tbody.fnsec{break-inside:auto}
+.fs-e tr.fnhead{break-after:avoid;page-break-after:avoid}
+/* F：チェック欄を「貼」スタンプにする */
+.fs-f tr.fnsku td.chk i{display:none}
+.fs-f tr.fnsku .fnstamp{display:inline-flex;align-items:center;justify-content:center;width:8mm;height:8mm;border:2.5px solid #000;border-radius:50%;font-size:12pt;font-weight:900;background:#fff}
+.fs-f tr.fnsku td.name,.fs-f tr.fnsku td.code{font-weight:700}
+/* G：左右に極太の黒線＋商品コードの角に黒三角 */
+.fs-g tr.fnsku td:first-child{box-shadow:inset 2.5mm 0 0 #000;padding-left:3mm!important}
+.fs-g tr.fnsku td:last-child{box-shadow:inset -2.5mm 0 0 #000}
+.fs-g col.c-chk.wide{width:13mm!important}
+.fs-g tr.fnsku td.code{position:relative}
+.fs-g tr.fnsku td.code::before{content:"";position:absolute;left:0;top:0;border-style:solid;border-width:6mm 6mm 0 0;border-color:#000 transparent transparent transparent;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.fs-g tr.fnsku td.code,.fs-g tr.fnsku td.name{font-weight:700}
+/* A：左端の黒帯＋網かけ */
+.fs-a tr.fnsku td:not(.bc){background:repeating-linear-gradient(45deg,#fff 0 1.6mm,#d4d4d4 1.6mm 2.2mm)!important}
+.fs-a tr.fnsku td.chk{position:relative;padding-left:7mm!important;background:#fff!important}
+.fs-a tr.fnsku .fnband{display:flex;align-items:center;justify-content:center;text-align:center;position:absolute;left:0;top:0;bottom:0;width:6mm;background:#000;color:#fff;font-size:7.5pt;font-weight:700;line-height:1.15;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.fs-a tr.fnsku td.code,.fs-a tr.fnsku td.name,.fs-a tr.fnsku td.qty b{font-weight:700}
+/* B：太い二重枠 */
+.fs-b tr.fnsku td{border-top:2mm double #000!important;border-bottom:2mm double #000!important}
+.fs-b tr.fnsku td:first-child{border-left:2mm double #000!important}
+.fs-b tr.fnsku td:last-child{border-right:2mm double #000!important}
+.fs-b tr.fnsku td{background:#fff!important}
+/* C：行全体を黒地に白文字（バーコードの所だけ白） */
+.fs-c tr.fnsku td:not(.bc){background:#000!important;color:#fff!important}
+.fs-c tr.fnsku td.chk i{border-color:#fff;background:#000}
+.fs-c tr.fnsku .fnmsg{background:#fff;color:#000}
+.fs-c tr.fnsku .merged{border-color:#fff}
+.fs-c tr.fnsku td.bc{background:#fff!important}
+/* H：行を濃いグレーで塗る（バーコードの所だけ白） */
+.fs-h tr.fnsku td:not(.bc){background:#8c8c8c!important;color:#000}
+.fs-h tr.fnsku td.chk i{background:#fff}
+.fs-h tr.fnsku td.code,.fs-h tr.fnsku td.name{font-weight:700}
+.fs-h tr.fnsku .merged{background:#fff}
+.fs-h tr.fnsku td.bc{background:#fff!important}
 td.name .merged{display:inline-block;font-size:8.5pt;border:1px solid #000;border-radius:1mm;padding:0 1.5mm}
 td.qty{overflow:hidden;text-align:right;white-space:nowrap}
 td.qty b{font-size:20pt}
@@ -170,7 +229,7 @@ dialog::backdrop{background:rgba(15,23,42,.6)}
 @media screen and (max-width:860px){ #pages{display:none} .preview-title{display:none} }
 </style>
 </head>
-<body>
+<body class="fs-a">
 
 <header class="top noprint">
   <img src="icon-192.png" alt="">
@@ -190,7 +249,7 @@ dialog::backdrop{background:rgba(15,23,42,.6)}
     </div>
     <div class="loaded" id="loaded">
       <div class="file" id="fileName"></div>
-      <button class="btn g" id="again">別のCSVを入れる</button>
+      <button class="btn g" id="again">別のファイルを入れる</button>
     </div>
     <div id="result"></div>
   </section>
@@ -198,7 +257,8 @@ dialog::backdrop{background:rgba(15,23,42,.6)}
   <section class="step noprint off" id="step2">
     <h2 class="step-title"><span class="num">2</span>印刷する</h2>
     <button class="print-btn" id="printBtn">🖨 印刷する</button>
-    <div class="hint">印刷画面が出たら「A4」「縦」を確認して印刷してください</div>
+    <div class="hint">印刷画面が出たら <b class="bw">「カラー」→「白黒」</b> にして、「A4」「縦」を確認して印刷してください</div>
+    <div id="janBox"></div>
   </section>
 
   <div class="preview-title noprint" id="pvTitle" hidden>▼ 印刷されるもの（見本）</div>
@@ -423,8 +483,8 @@ function barcodeBlock(value){
   const svg=barcodeSVG(value); if(!svg) return null;
   const box=document.createElement("div"); box.className="bcbox";
   const row=document.createElement("div"); row.className="bcw";
-  row.innerHTML='<span class="aim">▶</span>'; row.appendChild(svg);
-  row.insertAdjacentHTML("beforeend",'<span class="aim">◀</span>');
+  row.innerHTML='<span class="aim">►</span>'; row.appendChild(svg);
+  row.insertAdjacentHTML("beforeend",'<span class="aim">◄</span>');
   box.appendChild(row);
   box.insertAdjacentHTML("beforeend",`<div class="bcnum">${esc(value)}</div>`);
   return box;
@@ -485,6 +545,7 @@ function render(){
     const p=document.createElement("div"); p.className="page";
     const when=[s.date&&s.date.replace(/-/g,"/"), s.time].filter(Boolean).join(" ");
     const hasExp=s.items.some(it=>it.exps && it.exps.size);
+    const hasFn=s.items.some(it=>{ const b=pickBarcode(it); return b && /^X0[0-9A-Z]{8}$/.test(b.val); });
     p.innerHTML=`
       <div class="p-head">
         <div>
@@ -499,9 +560,9 @@ function render(){
         </div>
         <div class="p-count"><div class="of">伝票</div><div class="n">${si+1}<span style="font-size:14pt">/${slips.length}</span></div><div class="slipbc"></div></div>
       </div>
-      ${s.note?`<div class="p-note"><h3>⚠ 特記事項（必ず読む）</h3><div>${esc(s.note)}</div></div>`:""}
+      ${s.note?`<div class="p-note"><h3><span class="mk">!</span> 特記事項（必ず読む）</h3><div>${esc(s.note)}</div></div>`:""}
       <table class="items">
-        <colgroup><col style="width:10mm"><col style="width:30mm"><col>${hasExp?'<col style="width:34mm">':""}<col style="width:19mm"><col style="width:46mm"></colgroup>
+        <colgroup><col class="c-chk${hasFn?" wide":""}" style="width:10mm"><col style="width:30mm"><col>${hasExp?'<col style="width:34mm">':""}<col style="width:19mm"><col style="width:46mm"></colgroup>
         <thead>
           <tr><th colspan="${hasExp?6:5}" class="cont">${esc(s.dest)} ／ 伝票 ${esc(s.code)}</th></tr>
           <tr><th>✓</th><th>商品コード</th><th>商品名</th>${hasExp?'<th style="text-align:center">出荷期限</th>':""}<th style="text-align:right">数量</th><th style="text-align:center">バーコード</th></tr>
@@ -510,14 +571,24 @@ function render(){
       </table>
       <div class="p-foot">
         <div><div class="p-total">${s.items.length}品目　合計 <b>${sumOf(s).toLocaleString()}</b> 個</div>
-        ${s.pdfTotal!=null?(s.pdfTotal===sumOf(s)?`<div class="p-check">✔ 出荷指示書の合計数量 ${s.pdfTotal} と一致</div>`:`<div class="p-check bad">⚠ 出荷指示書の合計数量 ${s.pdfTotal} と合いません（差 ${sumOf(s)-s.pdfTotal}）</div>`):""}</div>
+        ${s.pdfTotal!=null?(s.pdfTotal===sumOf(s)?`<div class="p-check">✓ 出荷指示書の合計数量 ${s.pdfTotal} と一致</div>`:`<div class="p-check bad">！ 出荷指示書の合計数量 ${s.pdfTotal} と合いません（差 ${sumOf(s)-s.pdfTotal}）</div>`):""}</div>
         <div class="p-sign"><div>1人目チェック</div><div>2人目チェック</div></div>
       </div>`;
     const table=p.querySelector("table.items"), tb0=p.querySelector("tbody");
     { const sb=p.querySelector(".slipbc"), blk=/^[0-9A-Za-z\-]+$/.test(s.code)?barcodeBlock(s.code):null;
       if(blk){ sb.innerHTML='<div class="lbl">伝票コード</div>'; sb.appendChild(blk); } }
     let prevG=null, tb=tb0;
-    s.items.forEach((it,ii)=>{
+    const isFn=it=>{ const b=pickBarcode(it); return !!(b && /^X0[0-9A-Z]{8}$/.test(b.val)); };
+    const groupFn=document.body.classList.contains("fs-e");
+    const order=groupFn?[...s.items.filter(it=>!isFn(it)),...s.items.filter(isFn)]:s.items;
+    let fnHeadDone=false;
+    order.forEach((it,ii)=>{
+      if(groupFn && isFn(it) && !fnHeadDone){
+        fnHeadDone=true;
+        tb=document.createElement("tbody"); tb.className="fnsec"; table.appendChild(tb);
+        tb.innerHTML=`<tr class="fnhead"><td colspan="${hasExp?6:5}">▼ ここから下は FNSKU商品：全部 JANシールを上から貼る（${s.items.filter(isFn).length}品目）</td></tr>`;
+        prevG=null;
+      }
       const exps=it.exps?[...it.exps.entries()].sort((a,b)=>a[0]<b[0]?-1:1):[];
       const split=exps.length>1;
       // 期限が割れている商品は、太枠でかこんだ1つのかたまり（ページをまたがない）にする
@@ -549,6 +620,12 @@ function render(){
         tb.appendChild(r);
       });
       const bc=tr.querySelector(".bc"), pick=pickBarcode(it);
+      // FNSKU（Amazon用ラベル）が登録されている商品＝JANシールを上から貼る商品
+      if(pick && /^X0[0-9A-Z]{8}$/.test(pick.val)){
+        tr.classList.add("fnsku");
+        tr.querySelector(".sub").insertAdjacentHTML("afterbegin",'<span class="fnmsg">FNSKU商品：JANシールを上から貼る</span>');
+        tr.querySelector(".chk").insertAdjacentHTML("beforeend",'<span class="fnband">JAN<br>貼</span><span class="fn2"><i></i><em>JAN<br>貼った</em></span><span class="fnstamp">貼</span>');
+      }
       const blk=pick?barcodeBlock(pick.val):null;
       if(blk){ if(pick.lg) bc.innerHTML='<div class="lg">ロジレスコード</div>'; bc.appendChild(blk); }
       else bc.innerHTML=`<div class="none">${pick?"バーコード形式エラー":"バーコード未登録"}</div>`;
@@ -561,7 +638,26 @@ function render(){
   $("pvTitle").hidden=false;
   $("step1").classList.add("done");
   $("step2").classList.remove("off");
-  $("printBtn").textContent=`🖨 印刷する（${slips.length}枚）`;
+  $("printBtn").textContent=`🖨 印刷する（${slips.length}伝票）`;
+  renderJanBox();
+}
+
+/* ---------- FNSKU商品のJANシールを、ラベル印刷ツールで印刷 ---------- */
+const LABEL_TOOL="https://rentaro-ogihara.github.io/rabel/";
+const fnItems=s=>s.items.filter(it=>{ const b=pickBarcode(it); return b && /^X0[0-9A-Z]{8}$/.test(b.val); });
+function renderJanBox(){
+  const box=$("janBox"); if(!box) return;
+  const list=current.slips.map((s,i)=>({s,i,f:fnItems(s)})).filter(x=>x.f.length);
+  if(!list.length){ box.innerHTML=""; return; }
+  box.innerHTML=`<div class="janbox"><h3>JANシール（FNSKU商品に上から貼る）</h3>
+    <p class="jhint">ボタンを押すとラベル印刷ツールが開き、そのまま印刷画面が出ます。<b>44面シートを新しく1枚目から</b>入れてください。</p>
+    ${list.map(x=>`<div class="janrow"><div class="jl"><b>伝票 ${x.i+1}/${current.slips.length}</b>　${esc(x.s.dest||x.s.code)}<br><span>${x.f.map(it=>esc(it.code)+" "+it.qty+"枚").join("　")}</span></div>
+      <button class="btn p janbtn" data-i="${x.i}">JANシールを印刷（${x.f.reduce((a,b)=>a+b.qty,0)}枚）</button></div>`).join("")}</div>`;
+  box.querySelectorAll(".janbtn").forEach(b=>b.onclick=()=>{
+    const s=current.slips[+b.dataset.i];
+    const d={title:`${s.dest||""} / ${s.code}`,pack:"row",items:fnItems(s).map(it=>({c:it.code,q:it.qty,n:it.name}))};
+    window.open(LABEL_TOOL+"#kenpin="+encodeURIComponent(JSON.stringify(d)),"_blank");
+  });
 }
 
 /* パソコンの文字の形がちがっても、期限や数量がはみ出して重ならないよう、入りきる大きさまで文字を縮める */
