@@ -65,7 +65,9 @@ button{font-family:inherit;cursor:pointer}
 .janrow{display:flex;gap:14px;align-items:center;justify-content:space-between;flex-wrap:wrap;background:var(--bg);border-radius:12px;padding:12px 14px;margin-bottom:10px}
 .janrow .jl{font-size:16px;flex:1;min-width:240px}
 .janrow .jl span{font-size:14px;color:var(--sub)}
-.janbtn{font-size:18px!important;padding:14px 20px!important}
+.janbtn,.itfbtn{font-size:18px!important;padding:14px 20px!important}
+.itfbtn{background:#fff!important;border:3px solid var(--ink)!important;color:var(--ink)}
+.jbtns{display:flex;gap:10px;flex-wrap:wrap}
 .print-btn{width:100%;background:var(--green);color:#fff;border:0;border-radius:16px;padding:26px;font-size:32px;font-weight:700;
   box-shadow:0 4px 0 #15803d}
 .print-btn:hover{background:#15803d}
@@ -132,7 +134,7 @@ td.qty .tot{display:block;font-size:8.5pt;font-weight:700;text-align:right;line-
 tr.fnsku td{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 .fnmsg{font-size:9pt;font-weight:700;background:#000;color:#fff;padding:.3mm 2mm;border-radius:1mm;-webkit-print-color-adjust:exact;print-color-adjust:exact}
 .fnband{display:none}
-.fs-a col.c-chk.wide{width:17mm!important}
+
 .fn2,.fnstamp{display:none}
 /* D：チェック欄を2つ（数量OK／JAN貼った） */
 .fs-d col.c-chk.wide{width:15mm!important}
@@ -158,9 +160,12 @@ tr.fnhead td{background:#000!important;color:#fff;font-weight:700;font-size:11pt
 .fs-g tr.fnsku td.code,.fs-g tr.fnsku td.name{font-weight:700}
 /* A：左端の黒帯＋網かけ */
 .fs-a tr.fnsku td:not(.bc){background:repeating-linear-gradient(45deg,#fff 0 1.6mm,#d4d4d4 1.6mm 2.2mm)!important}
-.fs-a tr.fnsku td.chk{position:relative;padding-left:7mm!important;background:#fff!important}
-.fs-a tr.fnsku .fnband{display:flex;align-items:center;justify-content:center;text-align:center;position:absolute;left:0;top:0;bottom:0;width:6mm;background:#000;color:#fff;font-size:7.5pt;font-weight:700;line-height:1.15;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-.fs-a tr.fnsku td.code,.fs-a tr.fnsku td.name,.fs-a tr.fnsku td.qty b{font-weight:700}
+/* A：網かけだけ（黒帯・文字の目印は出さない） */
+.fs-a tr.fnsku .fnmsg{display:none}
+.fs-a tr.fnsku td{border-top:1mm solid #000!important;border-bottom:1mm solid #000!important}
+.fs-a tr.fnsku td:first-child{border-left:1mm solid #000!important}
+.fs-a tr.fnsku td:last-child{border-right:1mm solid #000!important}
+.fs-a tr.fnsku td.chk i,.fs-a tr.fnsku .merged{background:#fff}
 /* B：太い二重枠 */
 .fs-b tr.fnsku td{border-top:2mm double #000!important;border-bottom:2mm double #000!important}
 .fs-b tr.fnsku td:first-child{border-left:2mm double #000!important}
@@ -647,16 +652,23 @@ const LABEL_TOOL="https://rentaro-ogihara.github.io/rabel/";
 const fnItems=s=>s.items.filter(it=>{ const b=pickBarcode(it); return b && /^X0[0-9A-Z]{8}$/.test(b.val); });
 function renderJanBox(){
   const box=$("janBox"); if(!box) return;
-  const list=current.slips.map((s,i)=>({s,i,f:fnItems(s)})).filter(x=>x.f.length);
-  if(!list.length){ box.innerHTML=""; return; }
-  box.innerHTML=`<div class="janbox"><h3>JANシール（FNSKU商品に上から貼る）</h3>
-    <p class="jhint">ボタンを押すとラベル印刷ツールが開き、そのまま印刷画面が出ます。<b>44面シートを新しく1枚目から</b>入れてください。</p>
-    ${list.map(x=>`<div class="janrow"><div class="jl"><b>伝票 ${x.i+1}/${current.slips.length}</b>　${esc(x.s.dest||x.s.code)}<br><span>${x.f.map(it=>esc(it.code)+" "+it.qty+"枚").join("　")}</span></div>
-      <button class="btn p janbtn" data-i="${x.i}">JANシールを印刷（${x.f.reduce((a,b)=>a+b.qty,0)}枚）</button></div>`).join("")}</div>`;
+  const all=current.slips.map((s,i)=>({s,i,f:fnItems(s)}));
+  box.innerHTML=`<div class="janbox"><h3>シール・ラベルを印刷（ラベル印刷ツールが開きます）</h3>
+    <p class="jhint">ボタンを押すとラベル印刷ツールが開き、そのまま印刷画面が出ます。シートは<b>新しく1枚目から</b>入れてください。<br>
+    <b>JANシール</b>＝FNSKU商品に上から貼る（44面）／<b>ITF</b>＝外箱に貼る（A4 6面・1箱1枚・端数の箱も1枚）</p>
+    ${all.map(x=>`<div class="janrow"><div class="jl"><b>伝票 ${x.i+1}/${current.slips.length}</b>　${esc(x.s.dest||x.s.code)}<br>
+      <span>${x.f.length?"FNSKU："+x.f.map(it=>esc(it.code)+" "+it.qty+"枚").join("　"):"FNSKU商品なし"}</span></div>
+      <div class="jbtns">${x.f.length?`<button class="btn p janbtn" data-i="${x.i}">JANシール（${x.f.reduce((a,b)=>a+b.qty,0)}枚）</button>`:""}
+      <button class="btn itfbtn" data-i="${x.i}">ITF（A4 6面）</button></div></div>`).join("")}</div>`;
+  const open=d=>window.open(LABEL_TOOL+"#kenpin="+encodeURIComponent(JSON.stringify(d)),"_blank");
   box.querySelectorAll(".janbtn").forEach(b=>b.onclick=()=>{
     const s=current.slips[+b.dataset.i];
-    const d={title:`${s.dest||""} / ${s.code}`,pack:"row",items:fnItems(s).map(it=>({c:it.code,q:it.qty,n:it.name}))};
-    window.open(LABEL_TOOL+"#kenpin="+encodeURIComponent(JSON.stringify(d)),"_blank");
+    open({title:`${s.dest||""} / ${s.code}`,pack:"row",items:fnItems(s).map(it=>({c:it.code,q:it.qty,n:it.name}))});
+  });
+  box.querySelectorAll(".itfbtn").forEach(b=>b.onclick=()=>{
+    const s=current.slips[+b.dataset.i];
+    open({type:"itf",title:`${s.dest||""} / ${s.code}`,items:s.items.map(it=>{ const pk=pickBarcode(it);
+      return {c:it.code,q:it.qty,n:it.name,j:(pk && /^45\d{11}$|^49\d{11}$/.test(pk.val))?pk.val:""}; })});
   });
 }
 
