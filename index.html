@@ -667,7 +667,7 @@ function renderJanBox(){
   });
   box.querySelectorAll(".itfbtn").forEach(b=>b.onclick=()=>{
     const s=current.slips[+b.dataset.i];
-    open({type:"itf",title:`${s.dest||""} / ${s.code}`,items:s.items.map(it=>{ const pk=pickBarcode(it);
+    open({type:"itf",pack:"row",title:`${s.dest||""} / ${s.code}`,items:s.items.map(it=>{ const pk=pickBarcode(it);
       return {c:it.code,q:it.qty,n:it.name,j:(pk && /^45\d{11}$|^49\d{11}$/.test(pk.val))?pk.val:""}; })});
   });
 }
