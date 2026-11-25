@@ -42,6 +42,12 @@ button{font-family:inherit;cursor:pointer}
 .drop .small{font-size:17px;color:var(--sub);margin-top:10px}
 .drop .arrow{font-size:56px;line-height:1;margin-bottom:8px}
 
+.nextdrop{display:none;margin-top:12px;border:3px dashed #93c5fd;background:#eff6ff;color:var(--blue);border-radius:12px;padding:12px 16px;font-size:16px;text-align:center}
+.dragcover{display:none;position:fixed;inset:0;z-index:50;background:rgba(37,99,235,.88);color:#fff;align-items:center;justify-content:center;text-align:center;border:10px dashed #fff}
+.dragcover.on{display:flex}
+.dragcover .arrow{font-size:90px;line-height:1}
+.dragcover .t{font-size:44px;font-weight:700;margin-top:10px}
+.dragcover .s{font-size:20px;margin-top:10px;opacity:.95}
 .loaded{display:none;align-items:center;gap:16px;flex-wrap:wrap}
 .loaded .file{font-size:18px;font-weight:700;flex:1;word-break:break-all}
 .loaded .file span{display:block;font-size:14px;color:var(--sub);font-weight:400}
@@ -183,6 +189,16 @@ tr.fnhead td{background:#000!important;color:#fff;font-weight:700;font-size:11pt
 .fs-h tr.fnsku td.code,.fs-h tr.fnsku td.name{font-weight:700}
 .fs-h tr.fnsku .merged{background:#fff}
 .fs-h tr.fnsku td.bc{background:#fff!important}
+/* セット商品 */
+tr.sethead td{background:#000!important;color:#fff;font-weight:700;font-size:11.5pt;padding:1.8mm 3mm!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+tr.sethead .sk{display:inline-block;background:#fff;color:#000;border-radius:1mm;padding:0 2mm;margin-right:2.5mm;font-size:10pt}
+tr.sethead small{font-size:9.5pt;font-weight:400}
+tr.resthead td{background:#fff!important;font-weight:700;font-size:10.5pt;padding:1.5mm 3mm!important;border-top:2.5px solid #000!important;border-bottom:2.5px solid #000!important}
+tbody.setgrp tr td:first-child{border-left:1mm solid #000}
+tbody.setgrp tr td:last-child{border-right:1mm solid #000}
+tbody.setgrp tr:last-child td{border-bottom:1mm solid #000}
+tr.sethead{break-after:avoid;page-break-after:avoid}
+.setlbl{display:inline-block;font-size:8pt;font-weight:700;border:1.5px solid #000;border-radius:1mm;padding:0 1.5mm;margin-right:1.5mm;vertical-align:1px;max-width:100%}
 td.name .merged{display:inline-block;font-size:8.5pt;border:1px solid #000;border-radius:1mm;padding:0 1.5mm}
 td.qty{overflow:hidden;text-align:right;white-space:nowrap}
 td.qty b{font-size:20pt}
@@ -223,7 +239,45 @@ dialog::backdrop{background:rgba(15,23,42,.6)}
 .empty{font-size:17px;text-align:center;padding:24px;color:var(--green);font-weight:700}
 
 @page{size:A4 portrait;margin:8mm}
+/* 頭紙 */
+#headsheet{display:none}
+.hs{font-size:10.5pt;color:#000;font-family:"BIZ UDPGothic","Meiryo","Noto Sans CJK JP",sans-serif}
+.hs-top{display:flex;justify-content:space-between;align-items:center;margin:1mm 0 3mm}
+.hs-title{font-size:20pt;font-weight:700}
+.hs-strict{border:2.5px solid #000;outline:1px solid #000;outline-offset:1.2mm;padding:1.5mm 6mm;font-size:15pt;font-weight:700;margin-right:1.5mm}
+.hs-t{width:100%;border-collapse:collapse;margin-bottom:0}
+.hs-t th,.hs-t td{border:1px solid #555;padding:1.6mm 2.5mm;vertical-align:middle;text-align:left}
+.hs-t th.dk{background:#333;color:#fff;font-weight:700;text-align:center;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.hs-t th.lt{background:#ddd;font-weight:700;text-align:center;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.hs-t th small{font-size:8pt;font-weight:400}
+.hs-t td.cb{font-size:10pt}
+.hs-t td.c{text-align:center}
+.hs-t td.note{vertical-align:top;font-size:9pt;color:#333}
+.hs-main{border:2.5px solid #000;margin-top:1mm}
+.hs-main th{width:24mm;font-size:12pt;white-space:nowrap}
+.hs-date{width:38mm;font-size:13pt;white-space:nowrap;text-align:center!important}
+.hs-date b{font-size:22pt;display:inline-block;min-width:9mm;text-align:center}
+.hs-batch{font-size:24pt;font-weight:900;line-height:1.2;height:20mm;letter-spacing:.02em;word-break:break-all}
+.hs-sec{background:#333;color:#fff;font-weight:700;padding:1.2mm 2.5mm;margin-top:3.5mm;font-size:11pt;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.hs-sec small{font-weight:400;font-size:8.5pt}
+.hs-cut{text-align:center;font-weight:700;margin-top:5mm;border-top:1px dashed #000;padding-top:0;position:relative;top:-0.1mm}
+.hs-flow{display:flex;align-items:center;gap:3mm;margin-top:1.5mm}
+.hs-flow div{flex:1;border:1px solid #555;height:21mm}
+.hs-flow .h{height:auto!important;border:0!important;background:#777;color:#fff;text-align:center;font-weight:700;padding:1mm;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.hs-flow .h.dk2{background:#222}
+.hs-flow span{font-size:16pt}
+.hs-log tr.hd th{background:#333;color:#fff;text-align:center;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.hs-log td,.hs-log th{height:10mm;white-space:nowrap}
+.hs-log td.note{white-space:normal}
+.hs-bottom{margin-top:3.5mm}
+.hs-bottom td{height:15mm}
+.headrow{display:flex;gap:14px;align-items:center;justify-content:space-between;flex-wrap:wrap;background:#fff7ed;border:2px solid #fdba74;border-radius:12px;padding:12px 14px;margin-top:18px}
+.headrow .jl{font-size:16px;flex:1;min-width:240px}
+.headrow .jl span{font-size:14px;color:var(--sub)}
+.headbtn{font-size:18px!important;padding:14px 20px!important;background:#fff!important;border:3px solid #ea580c!important;color:#9a3412}
 @media print{
+  body.print-head #pages{display:none!important}
+  body.print-head #headsheet{display:block!important}
   body{background:#fff}
   .noprint{display:none!important}
   .wrap{max-width:none;padding:0}
@@ -234,8 +288,9 @@ dialog::backdrop{background:rgba(15,23,42,.6)}
 @media screen and (max-width:860px){ #pages{display:none} .preview-title{display:none} }
 </style>
 </head>
-<body class="fs-a">
+<body class="fs-a set-a">
 
+<div class="dragcover noprint" id="dragcover"><div><div class="arrow">⬇</div><div class="t">ここで離すと読み込みます</div><div class="s">今の検品リストは、新しいファイルの内容に入れかわります</div></div></div>
 <header class="top noprint">
   <img src="icon-192.png" alt="">
   <h1>まとめ検品君</h1>
@@ -254,8 +309,9 @@ dialog::backdrop{background:rgba(15,23,42,.6)}
     </div>
     <div class="loaded" id="loaded">
       <div class="file" id="fileName"></div>
-      <button class="btn g" id="again">別のファイルを入れる</button>
+      <button class="btn g" id="again">別のファイルを選ぶ</button>
     </div>
+    <div class="nextdrop" id="nextdrop">⬇ 次のファイルは、<b>この画面のどこにドラッグしてもOK</b>（今の内容と入れかわります）</div>
     <div id="result"></div>
   </section>
 
@@ -263,11 +319,13 @@ dialog::backdrop{background:rgba(15,23,42,.6)}
     <h2 class="step-title"><span class="num">2</span>印刷する</h2>
     <button class="print-btn" id="printBtn">🖨 印刷する</button>
     <div class="hint">印刷画面が出たら <b class="bw">「カラー」→「白黒」</b> にして、「A4」「縦」を確認して印刷してください</div>
+    <div id="headBox"></div>
     <div id="janBox"></div>
   </section>
 
   <div class="preview-title noprint" id="pvTitle" hidden>▼ 印刷されるもの（見本）</div>
   <div id="pages"></div>
+  <div id="headsheet"></div>
 </main>
 
 <dialog id="reg">
@@ -378,9 +436,12 @@ function buildSlips(rows){
 }
 
 /* 同じ商品コードを1行にまとめる（出荷期限日ごとの内訳も持つ） */
+/* セット商品：商品名が「セット名 >中身の商品名」の形 → セット名を分けて持つ。セットの中と単品は別の行 */
+function splitSet(name){ const m=String(name).match(/^(.+?)\s*[>＞]\s*(.+)$/); return m?{set:m[1].trim(),name:m[2].trim()}:{set:"",name}; }
 function addItem(map,r){
-  if(!map.has(r.code)) map.set(r.code,{code:r.code,name:r.name,qty:0,parts:[],exps:new Map(),csvBc:"",lgCode:""});
-  const it=map.get(r.code); it.qty+=r.qty; it.parts.push(r.qty);
+  const sp=splitSet(r.name), key=(sp.set?sp.set+"\u0000":"")+r.code;
+  if(!map.has(key)) map.set(key,{code:r.code,name:sp.name,set:sp.set,qty:0,parts:[],exps:new Map(),csvBc:"",lgCode:""});
+  const it=map.get(key); it.qty+=r.qty; it.parts.push(r.qty);
   if(r.exp) it.exps.set(r.exp,(it.exps.get(r.exp)||0)+r.qty);
   if(r.csvBc && !it.csvBc) it.csvBc=r.csvBc;
   if(r.lgCode && !it.lgCode) it.lgCode=r.lgCode;
@@ -388,7 +449,9 @@ function addItem(map,r){
 function finishSlips(slips){
   return [...slips.values()].map(s=>{
     const items=[...s.items.values()].map(it=>({...it,genre:genreOf(it.code,it.name)}));
-    items.sort((a,b)=>a.genre-b.genre || collator.compare(a.code,b.code));
+    const setOrder=[...new Set(items.filter(it=>it.set).map(it=>it.set))];
+    const sk=it=>it.set?setOrder.indexOf(it.set):setOrder.length; // セットの中身を先に、セット以外をあとに
+    items.sort((a,b)=>sk(a)-sk(b) || a.genre-b.genre || collator.compare(a.code,b.code));
     return {...s,items};
   });
 }
@@ -398,11 +461,12 @@ if(window.pdfjsLib) pdfjsLib.GlobalWorkerOptions.workerSrc="pdf.worker.min.js";
 async function parsePDF(buf){
   if(!window.pdfjsLib) throw new Error("PDFを読む部品が読み込めませんでした。ネットにつないで開き直してください。");
   const doc=await pdfjsLib.getDocument({data:buf}).promise;
-  const slips=new Map(); let lineCount=0, total=0, lastCode=null;
+  const slips=new Map(); let lineCount=0, total=0, lastCode=null, pdfDate=null;
   for(let pn=1;pn<=doc.numPages;pn++){
     const page=await doc.getPage(pn);
     const tc=await page.getTextContent();
     const T=tc.items.filter(i=>i.str.trim()).map(i=>({s:i.str.trim(),x:i.transform[4],y:i.transform[5]}));
+    if(!pdfDate){ const dm=T.map(t=>t.s.match(/^(\d{4})\/(\d{1,2})\/(\d{1,2}) \d{1,2}:\d{2}/)).find(Boolean); if(dm) pdfDate={y:+dm[1],m:+dm[2],d:+dm[3]}; }
     const find=re=>T.find(t=>re.test(t.s));
     const hCode=find(/^商品コード$/), hName=find(/^商品名$/), hLoc=find(/^ロケーション$/), hQty=find(/^数量$/);
     if(!hCode||!hName||!hQty||!find(/^出荷指示書$/)){
@@ -422,7 +486,9 @@ async function parsePDF(buf){
       const left=T.filter(t=>t.y>topY && t.x<sumLbl.x-5 && t.x>(slipItem?slipItem.x+40:0) && Math.abs(t.y-sumLbl.y)<15).sort((a,b)=>b.y-a.y);
       dest=(left[0]||{}).s||""; method=(left[1]||{}).s||"";
       const n=T.find(t=>Math.abs(t.x-sumLbl.x)<20 && t.y<sumLbl.y && t.y>sumLbl.y-20 && /^[\d,]+$/.test(t.s));
-      if(n) pdfTotal=parseInt(n.s.replace(/,/g,""),10);
+      const inl=sumLbl.s.match(/合計数量\s*[:：]\s*([\d,]+)/); // 「合計数量 : 23」が1つの文字列のとき
+      if(inl) pdfTotal=parseInt(inl[1].replace(/,/g,""),10);
+      else if(n) pdfTotal=parseInt(n.s.replace(/,/g,""),10);
     }
     const noteLbl=find(/^出荷指示書\s*特記事項/);
     let note="";
@@ -462,7 +528,8 @@ async function parsePDF(buf){
     });
   }
   if(!slips.size) throw new Error("出荷指示書の中に商品が見つかりませんでした。");
-  return {slips:finishSlips(slips),lineCount,total,hasLg:true,isPdf:true};
+  const list=finishSlips(slips);
+  return {slips:list,lineCount,total,hasLg:true,isPdf:true,pdfDate,batch:(list.find(x=>x.title)||{}).title||""};
 }
 
 /* ---------- バーコード ---------- */
@@ -584,21 +651,24 @@ function render(){
       if(blk){ sb.innerHTML='<div class="lbl">伝票コード</div>'; sb.appendChild(blk); } }
     let prevG=null, tb=tb0;
     const isFn=it=>{ const b=pickBarcode(it); return !!(b && /^X0[0-9A-Z]{8}$/.test(b.val)); };
-    const groupFn=document.body.classList.contains("fs-e");
-    const order=groupFn?[...s.items.filter(it=>!isFn(it)),...s.items.filter(isFn)]:s.items;
-    let fnHeadDone=false;
-    order.forEach((it,ii)=>{
-      if(groupFn && isFn(it) && !fnHeadDone){
-        fnHeadDone=true;
-        tb=document.createElement("tbody"); tb.className="fnsec"; table.appendChild(tb);
-        tb.innerHTML=`<tr class="fnhead"><td colspan="${hasExp?6:5}">▼ ここから下は FNSKU商品：全部 JANシールを上から貼る（${s.items.filter(isFn).length}品目）</td></tr>`;
+    const setMode=document.body.classList.contains("set-b")?"b":"a";
+    const hasSet=s.items.some(it=>it.set);
+    let curSet=null;
+    s.items.forEach((it,ii)=>{
+      const cols=hasExp?6:5;
+      if(setMode==="a" && hasSet && (it.set||"")!==curSet){
+        curSet=it.set||"";
+        tb=document.createElement("tbody"); tb.className=it.set?"setgrp":"setrest"; table.appendChild(tb);
+        if(it.set){ const g=s.items.filter(x=>x.set===it.set);
+          tb.innerHTML=`<tr class="sethead"><td colspan="${cols}"><span class="sk">セット</span>${esc(it.set)}　<small>（中身 ${g.length}品目・合計 ${g.reduce((a,b)=>a+b.qty,0)}個）</small></td></tr>`; }
+        else tb.innerHTML=`<tr class="resthead"><td colspan="${cols}">▼ ここから下は セット以外の商品</td></tr>`;
         prevG=null;
       }
       const exps=it.exps?[...it.exps.entries()].sort((a,b)=>a[0]<b[0]?-1:1):[];
       const split=exps.length>1;
       // 期限が割れている商品は、太枠でかこんだ1つのかたまり（ページをまたがない）にする
       if(split){ tb=document.createElement("tbody"); tb.className="split"; table.appendChild(tb); }
-      else if(tb!==tb0 && tb.className==="split"){ tb=document.createElement("tbody"); table.appendChild(tb); }
+      else if(tb!==tb0 && tb.className==="split"){ tb=document.createElement("tbody"); if(setMode==="a"&&hasSet) tb.className=it.set?"setgrp":"setrest"; table.appendChild(tb); }
       const tr=document.createElement("tr");
       if(prevG!==null && it.genre!==prevG) tr.classList.add("gtop");
       if(ii%2) tr.classList.add("zebra");
@@ -611,7 +681,7 @@ function render(){
         : `<td class="expd"><span class="fit">${exps.length?esc(exps[0][0]):"―"}</span></td>`;
       tr.innerHTML=`<td class="chk"><i></i></td>
         <td class="code">${esc(it.code)}</td>
-        <td class="name">${esc(it.name)}<div class="sub">${sub}</div></td>
+        <td class="name">${setMode==="b"&&it.set?`<span class="setlbl">${esc(it.set)}</span>`:""}${esc(it.name)}<div class="sub">${sub}</div></td>
         ${expTd}
         <td class="qty">${split?'<span class="tot">合計</span>':""}<span class="fit"><b>${it.qty.toLocaleString()}</b><small>個</small></span></td>
         <td class="bc"></td>`;
@@ -644,7 +714,7 @@ function render(){
   $("step1").classList.add("done");
   $("step2").classList.remove("off");
   $("printBtn").textContent=`🖨 印刷する（${slips.length}伝票）`;
-  renderJanBox();
+  renderJanBox(); renderHeadBox();
 }
 
 /* ---------- FNSKU商品のJANシールを、ラベル印刷ツールで印刷 ---------- */
@@ -692,7 +762,7 @@ window.addEventListener("beforeprint",fitAll);
 if(document.fonts&&document.fonts.ready) document.fonts.ready.then(()=>{ if(current) fitAll(); });
 
 function showError(msg){
-  current=null; $("pages").innerHTML=""; $("pvTitle").hidden=true;
+  current=null; $("pages").innerHTML=""; $("headBox").innerHTML=""; $("headsheet").innerHTML=""; $("janBox").innerHTML=""; $("pvTitle").hidden=true;
   $("step1").classList.remove("done"); $("step2").classList.add("off");
   $("result").innerHTML=`<div class="alert err"><span class="ic">✖</span><div class="msg">${esc(msg)}</div></div>`;
 }
@@ -700,7 +770,7 @@ function showError(msg){
 async function loadFile(file){
   if(!file) return;
   currentFile=file.name;
-  $("drop").style.display="none"; $("loaded").style.display="flex";
+  $("drop").style.display="none"; $("loaded").style.display="flex"; $("nextdrop").style.display="block";
   $("fileName").innerHTML=`📄 ${esc(file.name)}<span>${new Date(file.lastModified).toLocaleString("ja-JP")}</span>`;
   try{
     const buf=await file.arrayBuffer();
@@ -720,11 +790,63 @@ async function loadFile(file){
 const drop=$("drop"), input=$("file");
 drop.onclick=()=>input.click();
 input.onchange=()=>{ loadFile(input.files[0]); input.value=""; };
-["dragenter","dragover"].forEach(ev=>document.addEventListener(ev,e=>{e.preventDefault(); drop.classList.add("over");}));
-["dragleave","drop"].forEach(ev=>document.addEventListener(ev,e=>{e.preventDefault(); if(ev==="drop"||e.target===drop) drop.classList.remove("over");}));
-document.addEventListener("drop",e=>{ const f=e.dataTransfer&&e.dataTransfer.files[0]; if(f) loadFile(f); });
+/* ファイルのドラッグ：画面のどこに落としても読み込む（2回目以降も）。ドラッグ中は画面全体に案内を出す */
+const cover=$("dragcover"); let dragDepth=0;
+const isFileDrag=e=>e.dataTransfer && [...(e.dataTransfer.types||[])].includes("Files");
+window.addEventListener("dragenter",e=>{ if(!isFileDrag(e)) return; e.preventDefault(); dragDepth++; cover.classList.add("on"); drop.classList.add("over"); });
+window.addEventListener("dragover",e=>{ if(!isFileDrag(e)) return; e.preventDefault(); e.dataTransfer.dropEffect="copy"; cover.classList.add("on"); });
+window.addEventListener("dragleave",e=>{ if(!isFileDrag(e)) return; dragDepth=Math.max(0,dragDepth-1); if(!dragDepth){ cover.classList.remove("on"); drop.classList.remove("over"); } });
+// 念のため：ドラッグが終わったのに案内が残ったら、マウスを動かす・クリックで消える（画面が操作できなくならないように）
+const hideCover=()=>{ if(cover.classList.contains("on")){ dragDepth=0; cover.classList.remove("on"); drop.classList.remove("over"); } };
+window.addEventListener("mousemove",hideCover); cover.addEventListener("click",hideCover); window.addEventListener("dragend",hideCover);
+window.addEventListener("drop",e=>{ e.preventDefault(); dragDepth=0; cover.classList.remove("on"); drop.classList.remove("over");
+  const f=e.dataTransfer&&e.dataTransfer.files&&e.dataTransfer.files[0]; if(f){ window.scrollTo({top:0}); loadFile(f); } });
 $("again").onclick=()=>{ input.click(); };
 $("printBtn").onclick=()=>window.print();
+
+/* ---------- BtoB用頭紙（出荷指示書PDFのとき・1バッチ1枚） ---------- */
+function headSheetHtml(){
+  const d=current.pdfDate;
+  return `<div class="hs">
+  <div class="hs-top"><div class="hs-title">BtoB 用頭紙</div><div class="hs-strict">出荷期限厳守</div></div>
+  <table class="hs-t hs-main"><tr>
+    <th class="dk">出荷日</th><td class="hs-date"><b>${d?d.m:"&nbsp;&nbsp;"}</b> 月　<b>${d?d.d:"&nbsp;&nbsp;"}</b> 日</td>
+    <th class="dk">バッチ名</th><td class="hs-batch">${esc(current.batch||"")}</td></tr></table>
+  <table class="hs-t"><tr><th class="lt" style="width:22mm">卸先</th><td class="cb">□ 楽天（RSL）　□ Amazon FBA　□ ピップ　□ ゼビオ　□ アミジェス　□ その他（　　　　　）</td></tr></table>
+  <div class="hs-sec">■ 卸先別 注意事項 <small>※該当する□に✓</small></div>
+  <table class="hs-t">
+    <tr><th class="lt" style="width:50mm">バーコードシール</th><td class="cb">□ なし　□ 通常 JAN　□ AMAZON　□ ITF</td></tr>
+    <tr><th class="lt">シール等の指定 <small>(複数可)</small></th><td class="cb">□ なし　□ FBA　□ 成分表　□ アレルゲン　□ その他（　　　　　）</td></tr>
+    <tr><th class="lt">スプーン貼り付け</th><td class="cb">□ なし　□ あり</td></tr>
+    <tr><th class="lt" style="height:17mm">その他注意点</th><td></td></tr>
+  </table>
+  <div class="hs-cut">▼ ここから下は作業者記入欄 ▼</div>
+  <div class="hs-sec">■ 工程管理 <small>※各工程が終わったら担当者が名前を記入</small></div>
+  <div class="hs-flow"><div><div class="h">① ピッキング</div></div><span>▶</span><div><div class="h">② 2nd チェック</div></div><span>▶</span><div><div class="h dk2">③ 梱包</div></div></div>
+  <div class="hs-sec">■ 流通加工作業ログ <small>※実施した作業の□に✓、数量を記入</small></div>
+  <table class="hs-t hs-log">
+    <tr class="hd"><th style="width:9mm">✓</th><th style="width:52mm">作業内容</th><th>種類・内容</th><th style="width:28mm">数量</th><th style="width:19mm">単位</th></tr>
+    <tr><td class="c">□</td><th class="lt">バーコードシール貼り付け</th><td class="c">□ 通常 JAN　□ AMAZON　□ ITF</td><td></td><td class="c">枚</td></tr>
+    <tr style="height:12mm"><td class="c">□</td><th class="lt">シール貼り付け</th><td class="note">シールの種類：</td><td></td><td class="c">枚</td></tr>
+    <tr><td class="c">□</td><th class="lt">スプーン貼り付け</th><td class="c">□ あり　□ なし</td><td></td><td class="c">セット</td></tr>
+    <tr style="height:17mm"><td class="c">□</td><th class="lt">セット組</th><td class="note">セット内容：</td><td></td><td class="c">セット</td></tr>
+  </table>
+  <div class="hs-sec">■ 使用資材 <small>※使用したものに✓</small></div>
+  <table class="hs-t"><tr><th class="lt" style="width:30mm">使用資材</th><td class="c">□ OPP 袋</td><td class="c">□ プチプチ袋</td><td class="c">□ 両面テープ</td></tr></table>
+  <table class="hs-t hs-bottom"><tr><th class="lt" rowspan="2" style="width:20mm">備考</th><td rowspan="2"></td><th class="dk" style="width:28mm">バッチ作成者</th><th class="dk" style="width:28mm">確認者</th></tr>
+    <tr style="height:15mm"><td></td><td></td></tr></table>
+  </div>`;
+}
+function renderHeadBox(){
+  const box=$("headBox"); if(!box) return;
+  if(!current || !current.isPdf){ box.innerHTML=""; $("headsheet").innerHTML=""; return; }
+  $("headsheet").innerHTML=headSheetHtml();
+  const d=current.pdfDate;
+  box.innerHTML=`<div class="headrow"><div class="jl"><b>BtoB用頭紙</b>（このバッチに1枚）<br><span>出荷日 ${d?d.m+"月"+d.d+"日":"（日付が読み取れないので手書き）"}／バッチ名 ${esc(current.batch||"（なし）")}</span></div>
+    <button class="btn headbtn" id="headBtn">頭紙を印刷（1枚）</button></div>`;
+  $("headBtn").onclick=()=>{ document.body.classList.add("print-head"); window.print(); };
+}
+window.addEventListener("afterprint",()=>document.body.classList.remove("print-head"));
 
 /* ---------- バーコード登録 ---------- */
 const dlg=$("reg");
