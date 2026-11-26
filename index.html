@@ -476,8 +476,9 @@ async function parsePDF(buf){
     const topY=hCode.y;
     // ---- 上の部分（伝票コード・お届け先・配送方法・合計数量・特記事項・見出し）
     const titleItem=find(/^出荷指示書$/);
-    const title=T.filter(t=>Math.abs(t.y-titleItem.y)<4 && t.x>titleItem.x && !/^\d+\s*\/\s*\d+$/.test(t.s))
-      .sort((a,b)=>a.x-b.x).map(t=>t.s).join(" ").replace(/^:\s*/,"").trim();
+    // バッチ名：長いと2行に折り返されるので、「出荷指示書」の横の上下2行ぶんを集める
+    const title=T.filter(t=>Math.abs(t.y-titleItem.y)<12 && t.x>titleItem.x+20 && !/^\d+\s*\/\s*\d+$/.test(t.s))
+      .sort((a,b)=>(Math.abs(a.y-b.y)>2?b.y-a.y:a.x-b.x)).map(t=>t.s).join(" ").replace(/^[:：]\s*/,"").replace(/\s+/g," ").trim();
     const slipItem=T.find(t=>t.y>topY && /^\d{10,20}$/.test(t.s));
     const code=slipItem?slipItem.s:(lastCode||"伝票"+pn);
     const sumLbl=find(/^合計数量/);
