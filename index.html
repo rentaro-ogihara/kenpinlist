@@ -272,6 +272,14 @@ dialog::backdrop{background:rgba(15,23,42,.6)}
 .hs-log tr.hd th{background:#333;color:#fff;text-align:center;-webkit-print-color-adjust:exact;print-color-adjust:exact}
 .hs-log td,.hs-log th{height:10mm;white-space:nowrap}
 .hs-log td.note{white-space:normal}
+.hs-log td,.hs-log th{vertical-align:middle}
+.hs-log th.lt{text-align:center}
+.hs-log td.hs-kinds{white-space:normal;padding:1.5mm 3mm;line-height:1}
+.hs-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.8mm 6mm;align-items:center}
+.hs-li{display:flex;align-items:center;justify-content:flex-end;gap:1mm;white-space:nowrap;font-size:10pt}
+.hs-li>:first-child{margin-right:auto}
+.hs-log td.hs-qty{font-weight:900;font-size:14pt}
+.hs-cnt{display:inline-block;min-width:13mm;border-bottom:1.2px solid #000;text-align:center;font-weight:900;font-size:12pt;line-height:1.1}
 .hs-bottom{margin-top:3.5mm}
 .hs-bottom td{height:15mm}
 .headrow{display:flex;gap:14px;align-items:center;justify-content:space-between;flex-wrap:wrap;background:#fff7ed;border:2px solid #fdba74;border-radius:12px;padding:12px 14px;margin-top:18px}
@@ -771,6 +779,7 @@ function renderJanBox(){
       <div class="jbtns">${x.f.length?`<button class="btn p janbtn" data-i="${x.i}">JANシール（${x.f.reduce((a,b)=>a+b.qty,0)}枚）</button>`:""}
       <button class="btn itfbtn" data-i="${x.i}">ITF（A4 6面）</button></div>${apRowHtml(x.s,x.i)}</div>`).join("")}</div>`;
   bindAp(box);
+  if(current && current.isPdf) $("headsheet").innerHTML=headSheetHtml();
   const open=d=>window.open(LABEL_TOOL+"#kenpin="+encodeURIComponent(JSON.stringify(d)),"_blank");
   box.querySelectorAll(".janbtn").forEach(b=>b.onclick=()=>{
     const s=current.slips[+b.dataset.i];
@@ -1135,17 +1144,37 @@ const HS_RULES=[
   {name:"ゼビオ",     test:/ゼビオ|xebio/,            on:["dest:ゼビオ","bc:通常 JAN"]},
   {name:"アルペン",   test:/アルペン|alpen/,          on:["dest:アルペン","bc:通常 JAN","seal:APラベル"]},
 ];
+/* スプーン類（商品名に「スプーン」／商品コードがSPNではじまる）の合計個数 */
+const isSpoon=it=>/スプーン/.test(it.name||"") || /^SPN/i.test(it.code||"");
+function spoonQty(){ return current ? current.slips.reduce((a,s)=>a+s.items.filter(isSpoon).reduce((b,it)=>b+it.qty,0),0) : 0; }
 function hsAuto(){
   const t=String(current&&current.batch||"").normalize("NFKC").toLowerCase();
   const hit=HS_RULES.filter(r=>r.test.test(t));
-  return {hit,on:new Set(hit.flatMap(r=>r.on))};
+  const on=new Set(hit.flatMap(r=>r.on));
+  const sp=spoonQty(); if(sp>0) on.add("spoon:あり");
+  return {hit,on,spoon:sp};
 }
 function hsBoxes(group,labels,on){
   return labels.map(l=>on.has(group+":"+l)?`<span class="hs-on">☑ ${l}</span>`:`□ ${l}`).join("　");
 }
+/* 作業ログの枚数（バッチ全体）：通常JAN＝FNSKU商品の個数／ITF＝外箱の数（端数の箱も）／APラベル＝箱数×2 */
+function hsCounts(){
+  const c={}; let fn=0, itf=0, itfUnknown=false, ap=0;
+  current.slips.forEach(s=>{
+    s.items.forEach(it=>{ const b=pickBarcode(it); if(b && /^X0[0-9A-Z]{8}$/.test(b.val)) fn+=it.qty;
+      const bx=boxesFor(it); if(bx.per) itf+=bx.boxes; else itfUnknown=true; });
+    if(isAlpenSlip(s)) ap+=apInfo(s).items.reduce((a,x)=>a+x.boxes,0)*AP_PER_BOX;
+  });
+  c["bc:通常 JAN"]=String(fn); c["seal:ITF"]=itfPer?String(itf)+(itfUnknown?"＋?":""):""; c["seal:APラベル"]=String(ap);
+  return c;
+}
+function hsLogBoxes(group,labels,on,cnt){
+  return labels.map(l=>{ const k=group+":"+l, hit=on.has(k), n=hit&&cnt[k]!=null?cnt[k]:"";
+    return `<span class="hs-li">${hit?`<span class="hs-on">☑ ${l}</span>`:`□ ${l}`}<span class="hs-cnt">${esc(n)}</span>枚</span>`; }).join("");
+}
 function headSheetHtml(){
   const d=current.pdfDate;
-  const on=hsAuto().on;
+  const on=hsAuto().on, cnt=hsCounts();
   return `<div class="hs">
   <div class="hs-top"><div class="hs-title">BtoB 用頭紙</div><div class="hs-strict">出荷期限厳守</div></div>
   <table class="hs-t hs-main"><tr>
@@ -1156,7 +1185,7 @@ function headSheetHtml(){
   <table class="hs-t">
     <tr><th class="lt" style="width:50mm">バーコードシール</th><td class="cb">□ なし　${hsBoxes("bc",["通常 JAN","AMAZON"],on)}</td></tr>
     <tr><th class="lt">シール等の指定 <small>(複数可)</small></th><td class="cb">□ なし　${hsBoxes("seal",["FBA","APラベル","ITF","成分表","アレルゲン"],on)}　<span style="white-space:nowrap">□ その他（　　　）</span></td></tr>
-    <tr><th class="lt">スプーン貼り付け</th><td class="cb">□ なし　□ あり</td></tr>
+    <tr><th class="lt">スプーン貼り付け</th><td class="cb">□ なし　${hsBoxes("spoon",["あり"],on)}</td></tr>
     <tr><th class="lt" style="height:17mm">その他注意点</th><td></td></tr>
   </table>
   <div class="hs-cut">▼ ここから下は作業者記入欄 ▼</div>
@@ -1164,10 +1193,10 @@ function headSheetHtml(){
   <div class="hs-flow"><div><div class="h">① ピッキング</div></div><span>▶</span><div><div class="h">② 2nd チェック</div></div><span>▶</span><div><div class="h dk2">③ 梱包</div></div></div>
   <div class="hs-sec">■ 流通加工作業ログ <small>※実施した作業の□に✓、数量を記入</small></div>
   <table class="hs-t hs-log">
-    <tr class="hd"><th style="width:9mm">✓</th><th style="width:52mm">作業内容</th><th>種類・内容</th><th style="width:28mm">数量</th><th style="width:19mm">単位</th></tr>
-    <tr><td class="c">□</td><th class="lt">バーコードシール貼り付け</th><td class="c">□ 通常 JAN　□ AMAZON</td><td></td><td class="c">枚</td></tr>
-    <tr style="height:12mm"><td class="c">□</td><th class="lt">シール貼り付け</th><td class="note"><span style="font-size:10pt;color:#000">□ APラベル　□ ITF</span>　その他：</td><td></td><td class="c">枚</td></tr>
-    <tr><td class="c">□</td><th class="lt">スプーン貼り付け</th><td class="c">□ あり　□ なし</td><td></td><td class="c">セット</td></tr>
+    <tr class="hd"><th style="width:9mm">✓</th><th style="width:52mm">作業内容</th><th>種類・内容（シールは種類ごとの枚数）</th><th style="width:28mm">数量</th><th style="width:19mm">単位</th></tr>
+    <tr><td class="c">□</td><th class="lt">バーコードシール貼り付け</th><td colspan="3" class="hs-kinds"><div class="hs-grid">${hsLogBoxes("bc",["通常 JAN","AMAZON"],on,cnt)}</div></td></tr>
+    <tr><td class="c">□</td><th class="lt">シール貼り付け</th><td colspan="3" class="hs-kinds"><div class="hs-grid">${hsLogBoxes("seal",["FBA","APラベル","ITF","成分表","アレルゲン"],on,cnt)}<span class="hs-li">□ その他<span class="hs-cnt"></span>枚</span></div></td></tr>
+    <tr><td class="c">□</td><th class="lt">スプーン貼り付け</th><td class="c">${hsBoxes("spoon",["あり"],on)}　□ なし</td><td class="c hs-qty">${on.has("spoon:あり")?spoonQty():""}</td><td class="c">セット</td></tr>
     <tr style="height:17mm"><td class="c">□</td><th class="lt">セット組</th><td class="note">セット内容：</td><td></td><td class="c">セット</td></tr>
   </table>
   <div class="hs-sec">■ 使用資材 <small>※使用したものに✓</small></div>
@@ -1182,7 +1211,8 @@ function renderHeadBox(){
   $("headsheet").innerHTML=headSheetHtml();
   const d=current.pdfDate;
   const au=hsAuto();
-  const auto=au.hit.length?`<div class="hs-auto">✔ バッチ名から自動でチェック：${au.hit.map(r=>`<b>${esc(r.name)}</b>（${r.on.map(x=>esc(x.split(":")[1])).join("・")}）`).join("　")}</div>`:`<div class="hs-auto none">卸先はバッチ名から見つからなかったので、チェックは手書きです</div>`;
+  const auto=(au.hit.length?`<div class="hs-auto">✔ バッチ名から自動でチェック：${au.hit.map(r=>`<b>${esc(r.name)}</b>（${r.on.map(x=>esc(x.split(":")[1])).join("・")}）`).join("　")}</div>`:`<div class="hs-auto none">卸先はバッチ名から見つからなかったので、チェックは手書きです</div>`)
+    +(au.spoon?`<div class="hs-auto">✔ リストにスプーン類があるので「スプーン貼り付け：あり」に自動でチェック（<b>${au.spoon}セット</b>）</div>`:"");
   box.innerHTML=`<div class="headrow"><div class="jl"><b>BtoB用頭紙</b>（このバッチに1枚）<br><span>出荷日 ${d?d.m+"月"+d.d+"日":"（日付が読み取れないので手書き）"}／バッチ名 ${esc(current.batch||"（なし）")}</span>${auto}</div>
     <button class="btn headbtn" id="headBtn">頭紙を印刷（1枚）</button></div>`;
   $("headBtn").onclick=()=>{ document.body.classList.add("print-head"); window.print(); };
