@@ -246,6 +246,9 @@ dialog::backdrop{background:rgba(15,23,42,.6)}
 .hs-title{font-size:20pt;font-weight:700}
 /* 外枠は outline（箱の外側に描かれ、印刷で紙の端に切られる）ではなく、内側に収まる二重枠にする */
 .hs-strict{border:1px solid #000;padding:1.2mm;flex:none}
+.hs-sets{font-size:9.5pt;color:#000;line-height:1.35;margin-top:.5mm;white-space:normal}
+.hs-sets b{font-size:10.5pt}
+td.hs-setn{font-size:14pt;font-weight:700}
 .hs-strict span{display:block;border:2.5px solid #000;padding:1.5mm 6mm;font-size:15pt;font-weight:700;white-space:nowrap}
 .hs-t{width:100%;border-collapse:collapse;margin-bottom:0}
 .hs-t th,.hs-t td{border:1px solid #555;padding:1.6mm 2.5mm;vertical-align:middle;text-align:left}
@@ -790,7 +793,8 @@ function renderJanBox(){
   box.querySelectorAll(".itfbtn").forEach(b=>b.onclick=()=>{
     const s=current.slips[+b.dataset.i];
     open({type:"itf",pack:"row",title:`${s.dest||""} / ${s.code}`,items:s.items.map(it=>{ const pk=pickBarcode(it);
-      return {c:it.code,q:it.qty,n:it.name,j:(pk && /^45\d{11}$|^49\d{11}$/.test(pk.val))?pk.val:""}; })});
+      return {c:it.code,q:it.qty,n:it.name,j:(pk && /^45\d{11}$|^49\d{11}$/.test(pk.val))?pk.val:"",
+        e:it.exps&&it.exps.size?[...it.exps.entries()].sort((a,b)=>a[0]<b[0]?-1:1):[]}; })});
   });
 }
 
@@ -1160,6 +1164,15 @@ function hsBoxes(group,labels,on){
   return labels.map(l=>on.has(group+":"+l)?`<span class="hs-on">☑ ${l}</span>`:`□ ${l}`).join("　");
 }
 /* 作業ログの枚数（バッチ全体）：通常JAN＝FNSKU商品の個数／ITF＝外箱の数（端数の箱も）／APラベル＝箱数×2 */
+/* セット組：伝票ごとに「中身のいちばん少ない個数」をセット数とし、セット名ごとに合計 */
+function hsSets(){
+  const m=new Map();
+  current.slips.forEach(s=>{
+    const by=new Map(); s.items.forEach(it=>{ if(it.set){ if(!by.has(it.set)) by.set(it.set,[]); by.get(it.set).push(it.qty); } });
+    by.forEach((qs,name)=>m.set(name,(m.get(name)||0)+Math.min(...qs)));
+  });
+  return [...m.entries()].map(([name,n])=>({name,n}));
+}
 function hsCounts(){
   const c={}; let fn=0, itf=0, itfUnknown=false, ap=0;
   current.slips.forEach(s=>{
@@ -1199,7 +1212,8 @@ function headSheetHtml(){
     <tr><td class="c">□</td><th class="lt">バーコードシール貼り付け</th><td colspan="3" class="hs-kinds"><div class="hs-grid">${hsLogBoxes("bc",["通常 JAN","AMAZON"],on,cnt)}</div></td></tr>
     <tr><td class="c">□</td><th class="lt">シール貼り付け</th><td colspan="3" class="hs-kinds"><div class="hs-grid">${hsLogBoxes("seal",["FBA","APラベル","ITF","成分表","アレルゲン"],on,cnt)}<span class="hs-li">□ その他<span class="hs-cnt"></span>枚</span></div></td></tr>
     <tr><td class="c">□</td><th class="lt">スプーン貼り付け</th><td class="c">${hsBoxes("spoon",["あり"],on)}　□ なし</td><td class="c hs-qty">${on.has("spoon:あり")?spoonQty():""}</td><td class="c">セット</td></tr>
-    <tr style="height:15mm"><td class="c">□</td><th class="lt">セット組</th><td class="note">セット内容：</td><td></td><td class="c">セット</td></tr>
+    ${(()=>{ const ss=hsSets(), tot=ss.reduce((a,b)=>a+b.n,0);
+      return `<tr style="height:15mm"><td class="c">${ss.length?'<span class="hs-on">☑</span>':"□"}</td><th class="lt">セット組</th><td class="note">セット内容：${ss.length?`<div class="hs-sets">${ss.map(x=>`${esc(x.name)} × <b>${x.n}</b>`).join("<br>")}</div>`:""}</td><td class="c hs-setn">${ss.length?tot:""}</td><td class="c">セット</td></tr>`; })()}
   </table>
   <div class="hs-sec">■ 使用資材 <small>※使用したものに✓</small></div>
   <table class="hs-t"><tr><th class="lt" style="width:30mm">使用資材</th><td class="c">□ OPP 袋</td><td class="c">□ プチプチ袋</td><td class="c">□ 両面テープ</td></tr></table>
