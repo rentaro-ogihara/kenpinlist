@@ -1165,7 +1165,7 @@ function hsCounts(){
       const bx=boxesFor(it); if(bx.per) itf+=bx.boxes; else itfUnknown=true; });
     if(isAlpenSlip(s)) ap+=apInfo(s).items.reduce((a,x)=>a+x.boxes,0)*AP_PER_BOX;
   });
-  c["bc:通常 JAN"]=String(fn); c["seal:ITF"]=itfPer?String(itf)+(itfUnknown?"＋?":""):""; c["seal:APラベル"]=String(ap);
+  c["bc:通常 JAN"]=String(fn); c["seal:ITF"]=itfPer?String(itf):""; c["seal:APラベル"]=String(ap);
   return c;
 }
 function hsLogBoxes(group,labels,on,cnt){
