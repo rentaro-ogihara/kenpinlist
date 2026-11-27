@@ -244,7 +244,9 @@ dialog::backdrop{background:rgba(15,23,42,.6)}
 .hs{font-size:10.5pt;color:#000;font-family:"BIZ UDPGothic","Meiryo","Noto Sans CJK JP",sans-serif}
 .hs-top{display:flex;justify-content:space-between;align-items:center;margin:1mm 0 3mm}
 .hs-title{font-size:20pt;font-weight:700}
-.hs-strict{border:2.5px solid #000;outline:1px solid #000;outline-offset:1.2mm;padding:1.5mm 6mm;font-size:15pt;font-weight:700;margin-right:1.5mm}
+/* 外枠は outline（箱の外側に描かれ、印刷で紙の端に切られる）ではなく、内側に収まる二重枠にする */
+.hs-strict{border:1px solid #000;padding:1.2mm;flex:none}
+.hs-strict span{display:block;border:2.5px solid #000;padding:1.5mm 6mm;font-size:15pt;font-weight:700;white-space:nowrap}
 .hs-t{width:100%;border-collapse:collapse;margin-bottom:0}
 .hs-t th,.hs-t td{border:1px solid #555;padding:1.6mm 2.5mm;vertical-align:middle;text-align:left}
 .hs-t th.dk{background:#333;color:#fff;font-weight:700;text-align:center;-webkit-print-color-adjust:exact;print-color-adjust:exact}
@@ -261,11 +263,11 @@ dialog::backdrop{background:rgba(15,23,42,.6)}
 .hs-date{width:38mm;font-size:13pt;white-space:nowrap;text-align:center!important}
 .hs-date b{font-size:22pt;display:inline-block;min-width:9mm;text-align:center}
 .hs-batch{font-size:24pt;font-weight:900;line-height:1.2;height:20mm;letter-spacing:.02em;word-break:break-all}
-.hs-sec{background:#333;color:#fff;font-weight:700;padding:1.2mm 2.5mm;margin-top:3.5mm;font-size:11pt;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.hs-sec{background:#333;color:#fff;font-weight:700;padding:1.2mm 2.5mm;margin-top:2.6mm;font-size:11pt;-webkit-print-color-adjust:exact;print-color-adjust:exact}
 .hs-sec small{font-weight:400;font-size:8.5pt}
-.hs-cut{text-align:center;font-weight:700;margin-top:5mm;border-top:1px dashed #000;padding-top:0;position:relative;top:-0.1mm}
+.hs-cut{text-align:center;font-weight:700;margin-top:3.5mm;border-top:1px dashed #000;padding-top:0;position:relative;top:-0.1mm}
 .hs-flow{display:flex;align-items:center;gap:3mm;margin-top:1.5mm}
-.hs-flow div{flex:1;border:1px solid #555;height:21mm}
+.hs-flow div{flex:1;border:1px solid #555;height:18mm}
 .hs-flow .h{height:auto!important;border:0!important;background:#777;color:#fff;text-align:center;font-weight:700;padding:1mm;-webkit-print-color-adjust:exact;print-color-adjust:exact}
 .hs-flow .h.dk2{background:#222}
 .hs-flow span{font-size:16pt}
@@ -1176,7 +1178,7 @@ function headSheetHtml(){
   const d=current.pdfDate;
   const on=hsAuto().on, cnt=hsCounts();
   return `<div class="hs">
-  <div class="hs-top"><div class="hs-title">BtoB 用頭紙</div><div class="hs-strict">出荷期限厳守</div></div>
+  <div class="hs-top"><div class="hs-title">BtoB 用頭紙</div><div class="hs-strict"><span>出荷期限厳守</span></div></div>
   <table class="hs-t hs-main"><tr>
     <th class="dk">出荷日</th><td class="hs-date"><b>${d?d.m:"&nbsp;&nbsp;"}</b> 月　<b>${d?d.d:"&nbsp;&nbsp;"}</b> 日</td>
     <th class="dk">バッチ名</th><td class="hs-batch">${esc(current.batch||"")}</td></tr></table>
@@ -1186,7 +1188,7 @@ function headSheetHtml(){
     <tr><th class="lt" style="width:50mm">バーコードシール</th><td class="cb">□ なし　${hsBoxes("bc",["通常 JAN","AMAZON"],on)}</td></tr>
     <tr><th class="lt">シール等の指定 <small>(複数可)</small></th><td class="cb">□ なし　${hsBoxes("seal",["FBA","APラベル","ITF","成分表","アレルゲン"],on)}　<span style="white-space:nowrap">□ その他（　　　）</span></td></tr>
     <tr><th class="lt">スプーン貼り付け</th><td class="cb">□ なし　${hsBoxes("spoon",["あり"],on)}</td></tr>
-    <tr><th class="lt" style="height:17mm">その他注意点</th><td></td></tr>
+    <tr><th class="lt" style="height:14mm">その他注意点</th><td></td></tr>
   </table>
   <div class="hs-cut">▼ ここから下は作業者記入欄 ▼</div>
   <div class="hs-sec">■ 工程管理 <small>※各工程が終わったら担当者が名前を記入</small></div>
@@ -1197,7 +1199,7 @@ function headSheetHtml(){
     <tr><td class="c">□</td><th class="lt">バーコードシール貼り付け</th><td colspan="3" class="hs-kinds"><div class="hs-grid">${hsLogBoxes("bc",["通常 JAN","AMAZON"],on,cnt)}</div></td></tr>
     <tr><td class="c">□</td><th class="lt">シール貼り付け</th><td colspan="3" class="hs-kinds"><div class="hs-grid">${hsLogBoxes("seal",["FBA","APラベル","ITF","成分表","アレルゲン"],on,cnt)}<span class="hs-li">□ その他<span class="hs-cnt"></span>枚</span></div></td></tr>
     <tr><td class="c">□</td><th class="lt">スプーン貼り付け</th><td class="c">${hsBoxes("spoon",["あり"],on)}　□ なし</td><td class="c hs-qty">${on.has("spoon:あり")?spoonQty():""}</td><td class="c">セット</td></tr>
-    <tr style="height:17mm"><td class="c">□</td><th class="lt">セット組</th><td class="note">セット内容：</td><td></td><td class="c">セット</td></tr>
+    <tr style="height:15mm"><td class="c">□</td><th class="lt">セット組</th><td class="note">セット内容：</td><td></td><td class="c">セット</td></tr>
   </table>
   <div class="hs-sec">■ 使用資材 <small>※使用したものに✓</small></div>
   <table class="hs-t"><tr><th class="lt" style="width:30mm">使用資材</th><td class="c">□ OPP 袋</td><td class="c">□ プチプチ袋</td><td class="c">□ 両面テープ</td></tr></table>
