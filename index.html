@@ -250,7 +250,10 @@ dialog::backdrop{background:rgba(15,23,42,.6)}
 .hs-t th.dk{background:#333;color:#fff;font-weight:700;text-align:center;-webkit-print-color-adjust:exact;print-color-adjust:exact}
 .hs-t th.lt{background:#ddd;font-weight:700;text-align:center;-webkit-print-color-adjust:exact;print-color-adjust:exact}
 .hs-t th small{font-size:8pt;font-weight:400}
-.hs-t td.cb{font-size:10pt}
+.hs-t td.cb{font-size:10pt;line-height:1.9}
+.hs-on{display:inline-block;font-weight:900;border:2.2px solid #000;border-radius:1mm;padding:0 1.6mm;line-height:1.35;font-size:10.5pt}
+.hs-auto{margin-top:6px;font-size:15px;color:#14532d;background:#dcfce7;border-radius:8px;padding:6px 10px}
+.hs-auto.none{color:var(--sub);background:#f1f5f9}
 .hs-t td.c{text-align:center}
 .hs-t td.note{vertical-align:top;font-size:9pt;color:#333}
 .hs-main{border:2.5px solid #000;margin-top:1mm}
@@ -286,11 +289,33 @@ dialog::backdrop{background:rgba(15,23,42,.6)}
   body,table.items th,table.items tr.zebra td{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 }
 @media screen and (max-width:860px){ #pages{display:none} .preview-title{display:none} }
+
+/* ===== アルペン APラベル ===== */
+.apbtn{font-size:18px!important;padding:14px 20px!important;background:#7c2d12!important;color:#fff!important;border:3px solid #7c2d12!important}
+.apbtn:disabled{background:#e2e8f0!important;color:#94a3b8!important;border-color:#cbd5e1!important;cursor:not-allowed}
+.ap-area{flex-basis:100%;order:3}
+.ap-btns{order:2}
+.ap-wait{font-size:15px;color:var(--sub);background:#fff;border:2px dashed var(--line);border-radius:10px;padding:10px 12px}
+.ap-t{width:100%;border-collapse:collapse;background:#fff;font-size:15px}
+.ap-t th,.ap-t td{border:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:middle}
+.ap-t th{background:#f8fafc;font-size:13px;color:var(--sub)}
+.ap-t small{color:var(--sub);font-size:12px}
+.ap-t .ok{color:var(--green);font-weight:700;font-size:13px}
+.ap-t .ng{color:var(--red)}
+.ap-box{width:72px;font-size:20px;font-weight:700;padding:4px 6px;border:2px solid var(--line);border-radius:8px;text-align:right}
+.ap-reg{border-bottom:1px solid var(--line);padding:12px 0}
+.ap-reg-h b{font-size:16px}.ap-reg-h span{display:block;font-size:13px;color:var(--sub);margin-top:2px}
+.ap-reg-img{margin:8px 0;display:flex;align-items:center;gap:10px;font-size:13px;color:var(--sub)}
+.ap-reg-img img{max-height:56px;max-width:100%;border:1px solid var(--line);border-radius:6px;background:#fff}
+.ap-reg-f{display:grid;grid-template-columns:160px 90px 100px;gap:8px 12px}
+.ap-reg-f label{font-size:13px;color:var(--sub);display:flex;flex-direction:column;gap:3px}
+.ap-reg-f label.w{grid-column:1/-1}
+.ap-reg-f input{font-size:18px;padding:8px;border:2px solid var(--line);border-radius:8px;font-family:Consolas,"BIZ UDPGothic",monospace}
 </style>
 </head>
 <body class="fs-a set-a">
 
-<div class="dragcover noprint" id="dragcover"><div><div class="arrow">⬇</div><div class="t">ここで離すと読み込みます</div><div class="s">今の検品リストは、新しいファイルの内容に入れかわります</div></div></div>
+<div class="dragcover noprint" id="dragcover"><div><div class="arrow">⬇</div><div class="t">ここで離すと読み込みます</div><div class="s">今の検品リストは、新しいファイルの内容に入れかわります（アルペンの納品書は追加で読み込みます）</div></div></div>
 <header class="top noprint">
   <img src="icon-192.png" alt="">
   <h1>まとめ検品君</h1>
@@ -304,8 +329,8 @@ dialog::backdrop{background:rgba(15,23,42,.6)}
     <div class="drop" id="drop">
       <div class="arrow">⬇</div>
       <div class="big">ここにファイルをドラッグ</div>
-      <div class="small">または ここをクリックしてファイルを選ぶ<br>（LOGILESSの「OutboundDeliveryLine」ではじまるCSV／出荷指示書のPDF）</div>
-      <input type="file" id="file" accept=".csv,text/csv,.pdf,application/pdf" hidden>
+      <div class="small">または ここをクリックしてファイルを選ぶ<br>（LOGILESSの「OutboundDeliveryLine」ではじまるCSV／出荷指示書のPDF／アルペンの納品書PDF）</div>
+      <input type="file" id="file" accept=".csv,text/csv,.pdf,application/pdf" multiple hidden>
     </div>
     <div class="loaded" id="loaded">
       <div class="file" id="fileName"></div>
@@ -313,6 +338,7 @@ dialog::backdrop{background:rgba(15,23,42,.6)}
     </div>
     <div class="nextdrop" id="nextdrop">⬇ 次のファイルは、<b>この画面のどこにドラッグしてもOK</b>（今の内容と入れかわります）</div>
     <div id="result"></div>
+    <div id="apStatus"></div>
   </section>
 
   <section class="step noprint off" id="step2">
@@ -338,6 +364,19 @@ dialog::backdrop{background:rgba(15,23,42,.6)}
   <div class="dlg-f">
     <button class="btn g" id="regExport">products.jsonを書き出す</button>
     <button class="btn p" id="regSave">保存</button>
+  </div>
+</dialog>
+
+<dialog id="apReg">
+  <div class="dlg-h"><span>アルペンの品名を確認（はじめての商品だけ）</span><button id="apRegClose" aria-label="閉じる">×</button></div>
+  <div class="dlg-b">
+    <p>納品書の文字は自動で読み取っていますが、<b>半角カナの品名は読みまちがえることがあります</b>。画像を見て、品名をそのとおりに直してから「保存して印刷へ」を押してください。<br>
+    保存した内容はこのパソコンに記録され、次からは確認なしで使えます。全員のパソコンに反映するには「alpen.jsonを書き出す」でファイルを作り、GitHubに上書きしてください。</p>
+    <div id="apRegList"></div>
+  </div>
+  <div class="dlg-f">
+    <button class="btn g" id="apRegExport">alpen.jsonを書き出す</button>
+    <button class="btn p" id="apRegSave">保存して印刷へ</button>
   </div>
 </dialog>
 
@@ -726,11 +765,12 @@ function renderJanBox(){
   const all=current.slips.map((s,i)=>({s,i,f:fnItems(s)}));
   box.innerHTML=`<div class="janbox"><h3>シール・ラベルを印刷（ラベル印刷ツールが開きます）</h3>
     <p class="jhint">ボタンを押すとラベル印刷ツールが開き、そのまま印刷画面が出ます。シートは<b>新しく1枚目から</b>入れてください。<br>
-    <b>JANシール</b>＝FNSKU商品に上から貼る（44面）／<b>ITF</b>＝外箱に貼る（A4 6面・1箱1枚・端数の箱も1枚）</p>
+    <b>JANシール</b>＝FNSKU商品に上から貼る（44面）／<b>ITF</b>＝外箱に貼る（A4 6面・1箱1枚・端数の箱も1枚）<br><b>APラベル</b>＝アルペン伝票の外箱に貼る梱包明細（A4 6面・1箱2枚）。アルペンの納品書PDFも入れると押せます</p>
     ${all.map(x=>`<div class="janrow"><div class="jl"><b>伝票 ${x.i+1}/${current.slips.length}</b>　${esc(x.s.dest||x.s.code)}<br>
       <span>${x.f.length?"FNSKU："+x.f.map(it=>esc(it.code)+" "+it.qty+"枚").join("　"):"FNSKU商品なし"}</span></div>
       <div class="jbtns">${x.f.length?`<button class="btn p janbtn" data-i="${x.i}">JANシール（${x.f.reduce((a,b)=>a+b.qty,0)}枚）</button>`:""}
-      <button class="btn itfbtn" data-i="${x.i}">ITF（A4 6面）</button></div></div>`).join("")}</div>`;
+      <button class="btn itfbtn" data-i="${x.i}">ITF（A4 6面）</button></div>${apRowHtml(x.s,x.i)}</div>`).join("")}</div>`;
+  bindAp(box);
   const open=d=>window.open(LABEL_TOOL+"#kenpin="+encodeURIComponent(JSON.stringify(d)),"_blank");
   box.querySelectorAll(".janbtn").forEach(b=>b.onclick=()=>{
     const s=current.slips[+b.dataset.i];
@@ -741,6 +781,274 @@ function renderJanBox(){
     open({type:"itf",pack:"row",title:`${s.dest||""} / ${s.code}`,items:s.items.map(it=>{ const pk=pickBarcode(it);
       return {c:it.code,q:it.qty,n:it.name,j:(pk && /^45\d{11}$|^49\d{11}$/.test(pk.val))?pk.val:""}; })});
   });
+}
+
+
+/* =====================================================================
+   アルペン梱包明細（APラベル）
+   ・アルペンの出荷案内書（納品書）PDFは文字が図形なので、画像にしてOCRで読む
+   ・JANで検品リストの商品とひも付け → 伝票ごとの「APラベル」ボタンが押せるようになる
+   ・箱数＝ITF（外箱）の入数で割る／端数の箱も1箱／出荷期限がちがう分は箱を分ける。1箱に2枚
+   ===================================================================== */
+const AP_BUILTIN = {
+  "4589463562110":{code:"3420160106",name:"VT ﾃﾞﾘｼｬﾏﾝｺﾞ45",size:"000",color:"0000"},
+  "4589463562103":{code:"3420160006",name:"VT ﾃﾞﾘｼｬﾌﾞﾙﾍﾞ45",size:"000",color:"0000"},
+  "4589463562127":{code:"3420160206",name:"VT ﾃﾞﾘｼｬｱｯﾌﾟﾙ45",size:"000",color:"0000"},
+  "4589463562158":{code:"3420160306",name:"VT ﾃﾞﾘｼｬﾐﾙｸﾃｨ45",size:"000",color:"0000"},
+  "4589463561724":{code:"3422160106",name:"VT ﾃﾞﾘｼｬｿｲﾏｯﾁｬ",size:"000",color:"0000"},
+  "4589463561731":{code:"3422160306",name:"VT ﾃﾞﾘｼｬｿｲﾅｯﾂ",size:"000",color:"0000"}
+};
+const AP_LS="matome-kenpin-alpen";
+const AP_PER_BOX=2; // メイン面・サイド面
+let apRemote={}, apRows=[], apFiles=[], itfPer=null, apBoxEdit={};
+function apLsGet(){ try{ return JSON.parse(localStorage.getItem(AP_LS)||"{}"); }catch(e){ return {}; } }
+function apLsSet(o){ try{ localStorage.setItem(AP_LS,JSON.stringify(o)); return true; }catch(e){ return false; } }
+function apMaster(){ const m={...AP_BUILTIN,...apRemote,...apLsGet()}; delete m._説明; return m; }
+fetch("alpen.json",{cache:"no-cache"}).then(r=>r.ok?r.json():null).then(j=>{ if(j){ apRemote=j; if(current) renderJanBox(); } }).catch(()=>{});
+// ITFの外箱入数（ラベル印刷ツールの商品データ）
+fetch(new URL("data.json",LABEL_TOOL).href,{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>{
+  if(!j||!j.itf) return; itfPer={};
+  j.itf.filter(t=>t.k==="外箱" && parseInt(t.q,10)>0).forEach(t=>{ if(t.j) itfPer["j:"+t.j]=+t.q; if(t.c) itfPer["c:"+t.c]=+t.q; });
+  if(current) renderJanBox();
+}).catch(()=>{});
+
+const isAlpenSlip=s=>/アルペン/.test([s.dest,s.title,s.method].join(" "));
+const janOf=it=>{ const b=pickBarcode(it); return b && /^\d{13}$/.test(b.val) ? b.val : ""; };
+
+/* ---------- アルペン納品書かどうか（文字が取り出せないPDF） ---------- */
+async function isAlpenStatement(buf){
+  if(!window.pdfjsLib) return false;
+  const doc=await pdfjsLib.getDocument({data:buf.slice(0)}).promise;
+  const page=await doc.getPage(1);
+  const tc=await page.getTextContent();
+  const txt=tc.items.map(i=>i.str).join("").replace(/Powered by TCPDF \(www\.tcpdf\.org\)/g,"").trim();
+  return txt==="";
+}
+
+/* ---------- OCR ---------- */
+let ocrWorker=null;
+function loadScript(src){ return new Promise((ok,ng)=>{ if(window.Tesseract) return ok(); const s=document.createElement("script"); s.src=src; s.onload=ok; s.onerror=()=>ng(new Error("文字を読む部品（"+src+"）が読み込めませんでした。ネットにつないで開き直してください。")); document.head.appendChild(s); }); }
+async function getOcr(){
+  if(ocrWorker) return ocrWorker;
+  await loadScript("tesseract.min.js");
+  const abs=f=>new URL(f,location.href).href;
+  ocrWorker=await Tesseract.createWorker("jpn",1,{workerPath:abs("tesseract-worker.min.js"),corePath:abs("tesseract-core-simd-lstm.wasm.js"),langPath:abs("."),gzip:true});
+  return ocrWorker;
+}
+function cropCanvas(src,x,y,w,h,pad){
+  pad=pad||12; const c=document.createElement("canvas"); c.width=Math.max(1,w+pad*2); c.height=Math.max(1,h+pad*2);
+  const g=c.getContext("2d"); g.fillStyle="#fff"; g.fillRect(0,0,c.width,c.height); g.drawImage(src,x,y,w,h,pad,pad,w,h); return c;
+}
+function blankCanvas(c){ const d=c.getContext("2d").getImageData(0,0,c.width,c.height).data; let n=0; for(let i=0;i<d.length;i+=4) if(d[i]<128) n++; return n<c.width*c.height*0.002; }
+async function ocrText(c,digits){
+  const w=await getOcr();
+  await w.setParameters({tessedit_pageseg_mode:"7",tessedit_char_whitelist:digits?"0123456789":""});
+  const r=await w.recognize(c);
+  return (r.data.text||"").replace(/\s+/g,digits?"":" ").trim();
+}
+/* 表の線を見つける */
+function findGrid(cv){
+  const W=cv.width,H=cv.height,d=cv.getContext("2d").getImageData(0,0,W,H).data;
+  const dk=(x,y)=>d[(y*W+x)*4]<128;
+  const grp=a=>{ const g=[]; a.forEach(v=>{ if(g.length && v-g[g.length-1][g[g.length-1].length-1]<=2) g[g.length-1].push(v); else g.push([v]); }); return g.map(x=>Math.round(x.reduce((p,q)=>p+q,0)/x.length)); };
+  const rowCnt=y=>{ let n=0; for(let x=0;x<W;x++) if(dk(x,y)) n++; return n; };
+  const hl=grp([...Array(H).keys()].filter(y=>rowCnt(y)>W*0.45));
+  // 同じ間隔で並んでいる線＝商品の行
+  let best=[];
+  for(let i=0;i<hl.length-1;i++){ const s=hl[i+1]-hl[i]; if(s<20) continue; const run=[hl[i],hl[i+1]];
+    for(let j=i+2;j<hl.length && Math.abs((hl[j]-hl[j-1])-s)<=Math.max(4,s*0.03);j++) run.push(hl[j]);
+    if(run.length>best.length) best=run; }
+  if(best.length<3) return null;
+  const y0=best[0],y1=best[best.length-1];
+  const colCnt=x=>{ let n=0; for(let y=y0;y<y1;y++) if(dk(x,y)) n++; return n; };
+  const vl=grp([...Array(W).keys()].filter(x=>colCnt(x)>(y1-y0)*0.9));
+  if(vl.length<8) return null;
+  return {rows:best,cols:vl.slice(0,8)};
+}
+async function renderRot(page,scale){
+  const vp=page.getViewport({scale,rotation:(page.rotate+90)%360});
+  const cv=document.createElement("canvas"); cv.width=Math.floor(vp.width); cv.height=Math.floor(vp.height);
+  const g=cv.getContext("2d"); g.fillStyle="#fff"; g.fillRect(0,0,cv.width,cv.height);
+  await page.render({canvasContext:g,viewport:vp}).promise;
+  return {cv,grid:findGrid(cv)};
+}
+// JANは読みまちがえやすいので、2つの大きさで読んで、チェック数字が合うものを使う
+const JAN_SCALES=[3,4,3.5];
+async function ocrAlpenPdf(file,buf,onProg){
+  const doc=await pdfjsLib.getDocument({data:buf.slice(0)}).promise;
+  const rows=[];
+  for(let pn=1;pn<=doc.numPages;pn++){
+    onProg&&onProg(`アルペン納品書を読み取り中…（${esc(file.name)}　${pn}/${doc.numPages}ページ）`);
+    const page=await doc.getPage(pn);
+    const R=[await renderRot(page,JAN_SCALES[0])];
+    const {cv,grid}=R[0];
+    if(!grid) throw new Error(`「${file.name}」の ${pn}ページ目の表が見つかりませんでした。アルペンの出荷案内書（納品書）のPDFか確かめてください。`);
+    const m=8;
+    const cellOf=(rr,ri,ci,top,bot)=>{ const G=rr.grid, C=G.cols, k=rr.cv.width/cv.width, mm=Math.round(m*k);
+      const y0=G.rows[ri], y1=G.rows[ri+1], ym=Math.round((y0+y1)/2);
+      const ya=top==="mid"?ym-Math.round(4*k):y0+mm, yb=bot==="mid"?ym:y1-mm;
+      return cropCanvas(rr.cv,C[ci]+mm,ya,C[ci+1]-C[ci]-mm*2,yb-ya); };
+    for(let r=0;r<grid.rows.length-1;r++){
+      const janC=cellOf(R[0],r,6); if(blankCanvas(janC)) continue;
+      const reads=[(await ocrText(janC,true)).replace(/\D/g,"")];
+      for(let si=1; si<JAN_SCALES.length && !eanOk(reads[reads.length-1]); si++){
+        if(!R[si]) R[si]=await renderRot(page,JAN_SCALES[si]);
+        if(R[si].grid && R[si].grid.rows.length===grid.rows.length) reads.push((await ocrText(cellOf(R[si],r,6),true)).replace(/\D/g,""));
+      }
+      const jan=reads.find(eanOk)||reads[0];
+      const code=(await ocrText(cellOf(R[0],r,0,null,"mid"),true)).replace(/\D/g,"");
+      const nameC=cellOf(R[0],r,0,"mid");
+      const nameOcr=await ocrText(nameC,false);
+      const size=(await ocrText(cellOf(R[0],r,1),true)).replace(/\D/g,"");
+      const color=(await ocrText(cellOf(R[0],r,2),true)).replace(/\D/g,"");
+      const qty=parseInt((await ocrText(cellOf(R[0],r,3),true)).replace(/\D/g,""),10)||0;
+      rows.push({jan,reads,code,size,color,qty,nameOcr,nameImg:nameC.toDataURL("image/png"),file:file.name,page:pn,
+        ok:eanOk(jan) && /^\d{10}$/.test(code)});
+    }
+  }
+  if(!rows.length) throw new Error(`「${file.name}」から商品が読み取れませんでした。`);
+  return rows;
+}
+/* 読み取ったJANが、検品リストのJANと同じとみなせるか（1けた違い・1けた多い） */
+function janLike(r,jan){
+  if(!jan) return false;
+  if(r.jan===jan) return true;
+  if(eanOk(r.jan)) return false;
+  return (r.reads||[r.jan]).some(x=>{
+    if(x.length===13) return [...x].reduce((n,c,k)=>n+(c!==jan[k]),0)===1;
+    if(x.length===14) return [...x].some((_,k)=>x.slice(0,k)+x.slice(k+1)===jan);
+    return false; });
+}
+
+/* ---------- 伝票ごとのAPラベル情報 ---------- */
+function boxesFor(it){
+  const jan=janOf(it);
+  const per=itfPer ? (itfPer["j:"+jan]||itfPer["c:"+it.code]||0) : 0;
+  if(!per) return {per:0,boxes:1,calc:"入数不明"};
+  const parts=(it.exps && it.exps.size>1) ? [...it.exps.values()] : [it.qty];
+  const boxes=parts.reduce((a,q)=>a+Math.ceil(q/per),0);
+  const calc=parts.map(q=>`${q}÷${per}`).join("＋")+` → ${boxes}箱`;
+  return {per,boxes,calc};
+}
+function apInfo(s){
+  const M=apMaster();
+  const items=s.items.map(it=>{
+    const jan=janOf(it);
+    let cand=apRows.filter(r=>r.jan===jan);
+    if(!cand.length && jan) cand=apRows.filter(r=>janLike(r,jan)); // JANを1けた読みまちがえた行
+    const row=cand.find(r=>r.qty===it.qty)||cand[0]||null;
+    const m=M[jan]||null;
+    const bx=boxesFor(it);
+    const key=s.code+"|"+it.code;
+    const boxes=apBoxEdit[key]!=null?apBoxEdit[key]:bx.boxes;
+    return {it,jan,row,m,qtyOk:!!(row&&row.qty===it.qty),
+      code:row&&/^\d{10}$/.test(row.code)?row.code:(m?m.code:""),
+      size:row&&row.size?row.size:(m?m.size:""), color:row&&row.color?row.color:(m?m.color:""),
+      name:m?m.name:"", needName:!m || (row && /^\d{10}$/.test(row.code) && m.code!==row.code),
+      bx,boxes,key};
+  });
+  const ready=items.length && items.every(x=>x.row);
+  return {items,ready,missing:items.filter(x=>!x.row)};
+}
+
+/* 全角カナ・英数字を半角に（アルペンの品名は半角カナ） */
+const ZK="アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲンァィゥェォッャュョーガギグゲゴザジズゼゾダヂヅデドバビブベボパピプペポヴ・「」、。";
+const HK=["ｱ","ｲ","ｳ","ｴ","ｵ","ｶ","ｷ","ｸ","ｹ","ｺ","ｻ","ｼ","ｽ","ｾ","ｿ","ﾀ","ﾁ","ﾂ","ﾃ","ﾄ","ﾅ","ﾆ","ﾇ","ﾈ","ﾉ","ﾊ","ﾋ","ﾌ","ﾍ","ﾎ","ﾏ","ﾐ","ﾑ","ﾒ","ﾓ","ﾔ","ﾕ","ﾖ","ﾗ","ﾘ","ﾙ","ﾚ","ﾛ","ﾜ","ｦ","ﾝ","ｧ","ｨ","ｩ","ｪ","ｫ","ｯ","ｬ","ｭ","ｮ","ｰ","ｶﾞ","ｷﾞ","ｸﾞ","ｹﾞ","ｺﾞ","ｻﾞ","ｼﾞ","ｽﾞ","ｾﾞ","ｿﾞ","ﾀﾞ","ﾁﾞ","ﾂﾞ","ﾃﾞ","ﾄﾞ","ﾊﾞ","ﾋﾞ","ﾌﾞ","ﾍﾞ","ﾎﾞ","ﾊﾟ","ﾋﾟ","ﾌﾟ","ﾍﾟ","ﾎﾟ","ｳﾞ","･","｢","｣","､","｡"];
+function toHalf(t){
+  t=String(t).replace(/[\u3041-\u3096]/g,c=>String.fromCharCode(c.charCodeAt(0)+0x60)); // ひらがな→カタカナ
+  t=t.replace(/[！-～]/g,c=>String.fromCharCode(c.charCodeAt(0)-0xFEE0)).replace(/\u3000/g," ");
+  return [...t].map(c=>{ const i=ZK.indexOf(c); return i>=0?HK[i]:c; }).join("").replace(/\s+/g," ").trim();
+}
+/* ---------- 品名の確認（初めての商品だけ） ---------- */
+function apConfirm(list){
+  return new Promise(res=>{
+    const d=$("apReg");
+    $("apRegList").innerHTML=list.map((x,i)=>`<div class="ap-reg">
+      <div class="ap-reg-h"><b>${esc(x.it.name)}</b><span>JAN ${esc(x.jan)}${x.m&&x.row&&x.m.code!==x.row.code?`　<b style="color:var(--red)">登録済みの品番 ${esc(x.m.code)} と納品書の品番がちがいます</b>`:""}</span></div>
+      ${x.row?`<div class="ap-reg-img"><span>納品書の品名（画像）</span><img src="${x.row.nameImg}" alt=""></div>`:""}
+      <div class="ap-reg-f">
+        <label>コードNo.（10けた）<input data-i="${i}" data-k="code" value="${esc(x.code)}" inputmode="numeric" maxlength="10"></label>
+        <label>サイズ<input data-i="${i}" data-k="size" value="${esc(x.size||"000")}" maxlength="3"></label>
+        <label>カラー<input data-i="${i}" data-k="color" value="${esc(x.color||"0000")}" maxlength="4"></label>
+        <label class="w">アルペンの品名（上の画像と同じに。全角で入力しても半角カナに直して保存します）<input data-i="${i}" data-k="name" value="${esc(x.m?x.m.name:(x.row?x.row.nameOcr:""))}"></label>
+      </div></div>`).join("");
+    const done=v=>{ d.close(); res(v); };
+    $("apRegSave").onclick=()=>{
+      const saved=apLsGet(); let bad=false;
+      list.forEach((x,i)=>{
+        const v=k=>(d.querySelector(`input[data-i="${i}"][data-k="${k}"]`).value||"").trim();
+        const rec={code:toHalf(v("code")).replace(/\D/g,""),name:toHalf(v("name")),size:toHalf(v("size")),color:toHalf(v("color"))};
+        if(!/^\d{10}$/.test(rec.code)||!rec.name){ bad=true; d.querySelector(`input[data-i="${i}"][data-k="${rec.name?"code":"name"}"]`).style.borderColor="var(--red)"; return; }
+        saved[x.jan]=rec;
+      });
+      if(bad) return;
+      apLsSet(saved); done(true);
+    };
+    $("apRegClose").onclick=()=>done(false);
+    d.showModal();
+  });
+}
+function apExport(){
+  const out={"_説明":"アルペン用：JAN → アルペンの品番（コードNo.）・品名・サイズ・カラー。全員のパソコンに反映するときは、このファイルをGitHubに上書きしてください。"};
+  const M=apMaster(); Object.keys(M).sort().forEach(k=>out[k]=M[k]);
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(new Blob([JSON.stringify(out,null,2)+"\n"],{type:"application/json"}));
+  a.download="alpen.json"; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),2000);
+}
+
+/* ---------- 伝票ごとのAPラベル欄 ---------- */
+function apRowHtml(s,i){
+  if(!isAlpenSlip(s)) return "";
+  const inf=apInfo(s);
+  const btn=`<button class="btn apbtn" data-i="${i}" ${inf.ready?"":"disabled"}>APラベル（${inf.items.reduce((a,x)=>a+x.boxes,0)*AP_PER_BOX}枚）</button>`;
+  let body="";
+  if(!apRows.length) body=`<div class="ap-wait">アルペンの納品書（出荷案内書）のPDFを入れると押せるようになります</div>`;
+  else{
+    body=`<table class="ap-t"><tr><th>商品</th><th>コードNo.</th><th>数量</th><th>箱数</th><th>枚数</th></tr>${inf.items.map(x=>`<tr>
+      <td>${esc(x.it.code)}<br><small>${esc(x.name||"（品名は印刷前に確認）")}</small></td>
+      <td>${x.row?esc(x.code):'<b class="ng">納品書にありません</b>'}</td>
+      <td>${x.it.qty}個 ${x.row?(x.qtyOk?'<span class="ok">✔ 納品書と一致</span>':`<b class="ng">納品書は${x.row.qty}個</b>`):""}</td>
+      <td><input type="number" min="0" max="999" class="ap-box" data-key="${esc(x.key)}" value="${x.boxes}"> 箱<br><small>${esc(x.bx.calc)}</small></td>
+      <td><b>${x.boxes*AP_PER_BOX}</b>枚</td></tr>`).join("")}</table>`;
+  }
+  return `<div class="ap-area">${body}</div><div class="jbtns ap-btns">${btn}</div>`;
+}
+async function onApClick(i){
+  const s=current.slips[i];
+  let inf=apInfo(s);
+  if(!inf.ready) return;
+  const need=inf.items.filter(x=>x.needName);
+  if(need.length){ const ok=await apConfirm(need); if(!ok) return; renderJanBox(); inf=apInfo(s); }
+  const bad=inf.items.filter(x=>!x.qtyOk);
+  if(bad.length && !confirm("納品書と数量が合わない商品があります。\n"+bad.map(x=>x.it.code+"："+x.it.qty+"個 ／ 納品書 "+(x.row?x.row.qty:"-")+"個").join("\n")+"\n\nこのまま印刷しますか？")) return;
+  const items=inf.items.filter(x=>x.boxes>0).map(x=>({j:x.jan,c:x.code,n:x.name,s:x.size,k:x.color,b:x.boxes,per:AP_PER_BOX,src:x.it.code}));
+  window.open(LABEL_TOOL+"#kenpin="+encodeURIComponent(JSON.stringify({type:"ap",title:`${s.dest||""} / ${s.code}`,items})),"_blank");
+}
+function bindAp(box){
+  box.querySelectorAll(".apbtn").forEach(b=>b.onclick=()=>onApClick(+b.dataset.i));
+  box.querySelectorAll(".ap-box").forEach(inp=>inp.onchange=()=>{ const v=Math.max(0,Math.min(999,parseInt(inp.value,10)||0)); apBoxEdit[inp.dataset.key]=v; renderJanBox(); });
+}
+
+/* ---------- 納品書PDFを読み込む ---------- */
+async function loadAlpenFiles(list){
+  const st=$("apStatus");
+  for(const {file,buf} of list){
+    st.innerHTML=`<div class="alert warn"><span class="ic">⏳</span><div class="msg">アルペン納品書を読み取り中…（はじめは文字を読む部品の準備に少し時間がかかります）</div></div>`;
+    try{
+      const rows=await ocrAlpenPdf(file,buf,m=>{ st.innerHTML=`<div class="alert warn"><span class="ic">⏳</span><div class="msg">${m}</div></div>`; });
+      apRows=apRows.filter(r=>r.file!==file.name).concat(rows);
+      apFiles=apFiles.filter(f=>f.name!==file.name).concat([{name:file.name,rows:rows.length,pages:Math.max(...rows.map(r=>r.page))}]);
+    }catch(e){ st.innerHTML=`<div class="alert err"><span class="ic">✖</span><div class="msg">${esc(e.message||String(e))}</div></div>`; return; }
+  }
+  apStatus();
+  if(current) renderJanBox();
+}
+function apStatus(){
+  const st=$("apStatus"); if(!st) return;
+  if(!apFiles.length){ st.innerHTML=""; return; }
+  const badJan=apRows.filter(r=>!r.ok && !(current && current.slips.some(sl=>sl.items.some(it=>janLike(r,janOf(it))))));
+  st.innerHTML=`<div class="alert ok"><span class="ic">✔</span><div class="msg">アルペン納品書：${apFiles.map(f=>`<b>${esc(f.name)}</b>（${f.rows}商品）`).join("、")}${current?"":"<br>続けて、出荷指示書のPDFを入れてください。"}</div></div>`+
+    (badJan.length?`<div class="alert warn"><span class="ic">⚠</span><div class="msg">読み取れなかった行があります（${badJan.map(r=>esc(r.file)+" "+r.page+"ページ").join("、")}）。印刷前に数字を確かめてください。</div></div>`:"");
 }
 
 /* パソコンの文字の形がちがっても、期限や数量がはみ出して重ならないよう、入りきる大きさまで文字を縮める */
@@ -768,6 +1076,19 @@ function showError(msg){
   $("result").innerHTML=`<div class="alert err"><span class="ic">✖</span><div class="msg">${esc(msg)}</div></div>`;
 }
 
+async function loadFiles(files){
+  files=[...(files||[])]; if(!files.length) return;
+  const alp=[], main=[];
+  for(const f of files){
+    const buf=await f.arrayBuffer();
+    const head=String.fromCharCode(...new Uint8Array(buf.slice(0,5)));
+    let isAlp=false;
+    if(/\.pdf$/i.test(f.name) || head==="%PDF-"){ try{ isAlp=await isAlpenStatement(buf); }catch(e){} }
+    (isAlp?alp:main).push({file:f,buf});
+  }
+  if(main.length){ apRows=[]; apFiles=[]; apBoxEdit={}; $("apStatus").innerHTML=""; await loadFile(main[main.length-1].file); }
+  if(alp.length) await loadAlpenFiles(alp);
+}
 async function loadFile(file){
   if(!file) return;
   currentFile=file.name;
@@ -790,7 +1111,7 @@ async function loadFile(file){
 
 const drop=$("drop"), input=$("file");
 drop.onclick=()=>input.click();
-input.onchange=()=>{ loadFile(input.files[0]); input.value=""; };
+input.onchange=()=>{ const fs=[...input.files]; input.value=""; loadFiles(fs); };
 /* ファイルのドラッグ：画面のどこに落としても読み込む（2回目以降も）。ドラッグ中は画面全体に案内を出す */
 const cover=$("dragcover"); let dragDepth=0;
 const isFileDrag=e=>e.dataTransfer && [...(e.dataTransfer.types||[])].includes("Files");
@@ -801,23 +1122,40 @@ window.addEventListener("dragleave",e=>{ if(!isFileDrag(e)) return; dragDepth=Ma
 const hideCover=()=>{ if(cover.classList.contains("on")){ dragDepth=0; cover.classList.remove("on"); drop.classList.remove("over"); } };
 window.addEventListener("mousemove",hideCover); cover.addEventListener("click",hideCover); window.addEventListener("dragend",hideCover);
 window.addEventListener("drop",e=>{ e.preventDefault(); dragDepth=0; cover.classList.remove("on"); drop.classList.remove("over");
-  const f=e.dataTransfer&&e.dataTransfer.files&&e.dataTransfer.files[0]; if(f){ window.scrollTo({top:0}); loadFile(f); } });
+  const fs=e.dataTransfer&&e.dataTransfer.files; if(fs&&fs.length){ window.scrollTo({top:0}); loadFiles(fs); } });
 $("again").onclick=()=>{ input.click(); };
 $("printBtn").onclick=()=>window.print();
 
 /* ---------- BtoB用頭紙（出荷指示書PDFのとき・1バッチ1枚） ---------- */
+/* バッチ名から卸先を見つけて、頭紙のチェックを自動で入れる（全角・半角・大文字小文字のちがいも拾う） */
+const HS_RULES=[
+  {name:"ピップ",     test:/ピップ/,                  on:["dest:ピップ","bc:通常 JAN","seal:ITF"]},
+  {name:"Amazon",     test:/amazon|アマゾン|fba/,     on:["dest:Amazon FBA","bc:AMAZON","seal:FBA"]},
+  {name:"アミジェス", test:/アミジェス/,              on:["dest:アミジェス","bc:通常 JAN"]},
+  {name:"ゼビオ",     test:/ゼビオ|xebio/,            on:["dest:ゼビオ","bc:通常 JAN"]},
+  {name:"アルペン",   test:/アルペン|alpen/,          on:["dest:アルペン","bc:通常 JAN","seal:APラベル"]},
+];
+function hsAuto(){
+  const t=String(current&&current.batch||"").normalize("NFKC").toLowerCase();
+  const hit=HS_RULES.filter(r=>r.test.test(t));
+  return {hit,on:new Set(hit.flatMap(r=>r.on))};
+}
+function hsBoxes(group,labels,on){
+  return labels.map(l=>on.has(group+":"+l)?`<span class="hs-on">☑ ${l}</span>`:`□ ${l}`).join("　");
+}
 function headSheetHtml(){
   const d=current.pdfDate;
+  const on=hsAuto().on;
   return `<div class="hs">
   <div class="hs-top"><div class="hs-title">BtoB 用頭紙</div><div class="hs-strict">出荷期限厳守</div></div>
   <table class="hs-t hs-main"><tr>
     <th class="dk">出荷日</th><td class="hs-date"><b>${d?d.m:"&nbsp;&nbsp;"}</b> 月　<b>${d?d.d:"&nbsp;&nbsp;"}</b> 日</td>
     <th class="dk">バッチ名</th><td class="hs-batch">${esc(current.batch||"")}</td></tr></table>
-  <table class="hs-t"><tr><th class="lt" style="width:22mm">卸先</th><td class="cb">□ 楽天（RSL）　□ Amazon FBA　□ ピップ　□ ゼビオ　□ アミジェス　□ その他（　　　　　）</td></tr></table>
+  <table class="hs-t"><tr><th class="lt" style="width:22mm">卸先</th><td class="cb" style="font-size:9.5pt">${hsBoxes("dest",["楽天（RSL）","Amazon FBA","ピップ","ゼビオ","アミジェス","アルペン"],on)}　<span style="white-space:nowrap">□ その他（　　　）</span></td></tr></table>
   <div class="hs-sec">■ 卸先別 注意事項 <small>※該当する□に✓</small></div>
   <table class="hs-t">
-    <tr><th class="lt" style="width:50mm">バーコードシール</th><td class="cb">□ なし　□ 通常 JAN　□ AMAZON　□ ITF</td></tr>
-    <tr><th class="lt">シール等の指定 <small>(複数可)</small></th><td class="cb">□ なし　□ FBA　□ 成分表　□ アレルゲン　□ その他（　　　　　）</td></tr>
+    <tr><th class="lt" style="width:50mm">バーコードシール</th><td class="cb">□ なし　${hsBoxes("bc",["通常 JAN","AMAZON"],on)}</td></tr>
+    <tr><th class="lt">シール等の指定 <small>(複数可)</small></th><td class="cb">□ なし　${hsBoxes("seal",["FBA","APラベル","ITF","成分表","アレルゲン"],on)}　<span style="white-space:nowrap">□ その他（　　　）</span></td></tr>
     <tr><th class="lt">スプーン貼り付け</th><td class="cb">□ なし　□ あり</td></tr>
     <tr><th class="lt" style="height:17mm">その他注意点</th><td></td></tr>
   </table>
@@ -827,8 +1165,8 @@ function headSheetHtml(){
   <div class="hs-sec">■ 流通加工作業ログ <small>※実施した作業の□に✓、数量を記入</small></div>
   <table class="hs-t hs-log">
     <tr class="hd"><th style="width:9mm">✓</th><th style="width:52mm">作業内容</th><th>種類・内容</th><th style="width:28mm">数量</th><th style="width:19mm">単位</th></tr>
-    <tr><td class="c">□</td><th class="lt">バーコードシール貼り付け</th><td class="c">□ 通常 JAN　□ AMAZON　□ ITF</td><td></td><td class="c">枚</td></tr>
-    <tr style="height:12mm"><td class="c">□</td><th class="lt">シール貼り付け</th><td class="note">シールの種類：</td><td></td><td class="c">枚</td></tr>
+    <tr><td class="c">□</td><th class="lt">バーコードシール貼り付け</th><td class="c">□ 通常 JAN　□ AMAZON</td><td></td><td class="c">枚</td></tr>
+    <tr style="height:12mm"><td class="c">□</td><th class="lt">シール貼り付け</th><td class="note"><span style="font-size:10pt;color:#000">□ APラベル　□ ITF</span>　その他：</td><td></td><td class="c">枚</td></tr>
     <tr><td class="c">□</td><th class="lt">スプーン貼り付け</th><td class="c">□ あり　□ なし</td><td></td><td class="c">セット</td></tr>
     <tr style="height:17mm"><td class="c">□</td><th class="lt">セット組</th><td class="note">セット内容：</td><td></td><td class="c">セット</td></tr>
   </table>
@@ -843,7 +1181,9 @@ function renderHeadBox(){
   if(!current || !current.isPdf){ box.innerHTML=""; $("headsheet").innerHTML=""; return; }
   $("headsheet").innerHTML=headSheetHtml();
   const d=current.pdfDate;
-  box.innerHTML=`<div class="headrow"><div class="jl"><b>BtoB用頭紙</b>（このバッチに1枚）<br><span>出荷日 ${d?d.m+"月"+d.d+"日":"（日付が読み取れないので手書き）"}／バッチ名 ${esc(current.batch||"（なし）")}</span></div>
+  const au=hsAuto();
+  const auto=au.hit.length?`<div class="hs-auto">✔ バッチ名から自動でチェック：${au.hit.map(r=>`<b>${esc(r.name)}</b>（${r.on.map(x=>esc(x.split(":")[1])).join("・")}）`).join("　")}</div>`:`<div class="hs-auto none">卸先はバッチ名から見つからなかったので、チェックは手書きです</div>`;
+  box.innerHTML=`<div class="headrow"><div class="jl"><b>BtoB用頭紙</b>（このバッチに1枚）<br><span>出荷日 ${d?d.m+"月"+d.d+"日":"（日付が読み取れないので手書き）"}／バッチ名 ${esc(current.batch||"（なし）")}</span>${auto}</div>
     <button class="btn headbtn" id="headBtn">頭紙を印刷（1枚）</button></div>`;
   $("headBtn").onclick=()=>{ document.body.classList.add("print-head"); window.print(); };
 }
@@ -863,6 +1203,7 @@ function openReg(){
   dlg.showModal();
 }
 $("openReg").onclick=openReg;
+$("apRegExport").onclick=apExport;
 $("regClose").onclick=()=>dlg.close();
 $("regSave").onclick=()=>{
   const saved=lsGet(); let bad=[];
